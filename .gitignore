@@ -1,0 +1,21 @@
+# Backend (Laravel)
+backend/vendor/
+backend/.env
+backend/.env.local
+backend/node_modules/
+backend/.env.*.local
+backend/storage/logs/*
+backend/bootsrap/cache/*
+
+
+# Frontend (Vue)
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
