@@ -14,7 +14,7 @@ const AdminDashboard = () => import('@/views/admin/AdminDashboard.vue')
 const AdminProjects = () => import('@/views/admin/AdminProjects.vue')
 const AdminPosts = () => import('@/views/admin/AdminPosts.vue')
 const AdminSkills = () => import('@/views/admin/AdminSkills.vue')
-const AdmindExperiences = () => import('@/views/admin/AdminExperiences.vue')
+const AdminExperiences = () => import('@/views/admin/AdminExperiences.vue')
 const AdminServices = () => import('@/views/admin/AdminServices.vue')
 const AdminSettings = () => import('@/views/admin/AdminSettings.vue')
 const AdminMessages = () => import('@/views/admin/AdminMessages.vue')
@@ -34,7 +34,7 @@ const routes = [
   { path: '/admin/projects', name: 'admin.projects', component: AdminProjects, meta: { requiresAuth: true } },
   { path: '/admin/posts', name: 'admin.posts', component: AdminPosts, meta: { requiresAuth: true } },
   { path: '/admin/skills', name: 'admin.skills', component: AdminSkills, meta: { requiresAuth: true } },
-  { path: '/admin/experiences', name: 'admin.experiences', component: AdmindExperiences, meta: { requiresAuth: true } },
+  { path: '/admin/experiences', name: 'admin.experience', component: AdminExperiences, meta: { requiresAuth: true } },
   { path: '/admin/services', name: 'admin.services', component: AdminServices, meta: { requiresAuth: true } },
   { path: '/admin/settings', name: 'admin.settings', component: AdminSettings, meta: { requiresAuth: true } },
   { path: '/admin/messages', name: 'admin.messages', component: AdminMessages, meta: { requiresAuth: true } },
@@ -43,7 +43,7 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [],
+  routes,
 })
 
 
