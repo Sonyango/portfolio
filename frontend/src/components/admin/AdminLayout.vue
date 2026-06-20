@@ -1,21 +1,33 @@
 <script setup>
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import {
+  Squares2X2Icon,
+  FolderOpenIcon,
+  PencilSquareIcon,
+  BoltIcon,
+  BriefcaseIcon,
+  WrenchScrewdriverIcon,
+  PhotoIcon,
+  EnvelopeIcon,
+  Cog6ToothIcon,
+  PowerIcon,
+} from '@heroicons/vue/24/outline';
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
 const navItems = [
-  { name: 'Dashboard', route: 'admin.dashboard', icon: '' },
-  { name: 'Projects', route: 'admin.projects', icon: '' },
-  { name: 'Blog Posts', route: 'admin.posts', icon: '' },
-  { name: 'Skills', route: 'admin.skills', icon: '' },
-  { name: 'Experience', route: 'admin.experience', icon: '' },
-  { name: 'Services', route: 'admin.services', icon: '' },
-  { name: 'Media', route: 'admin.media', icon: '' },
-  { name: 'Messages', route: 'admin.messages', icon: '' },
-  { name: 'Settings', route: 'admin.settings', icon: '' },
+  { name: 'Dashboard', route: 'admin.dashboard', icon: Squares2X2Icon },
+  { name: 'Projects', route: 'admin.projects', icon: FolderOpenIcon },
+  { name: 'Blog Posts', route: 'admin.posts', icon: PencilSquareIcon },
+  { name: 'Skills', route: 'admin.skills', icon: BoltIcon },
+  { name: 'Experience', route: 'admin.experience', icon: BriefcaseIcon },
+  { name: 'Services', route: 'admin.services', icon: WrenchScrewdriverIcon },
+  { name: 'Media', route: 'admin.media', icon: PhotoIcon },
+  { name: 'Messages', route: 'admin.messages', icon: EnvelopeIcon },
+  { name: 'Settings', route: 'admin.settings', icon: Cog6ToothIcon },
 ]
 
 async function handleLogout() {
@@ -45,7 +57,7 @@ async function handleLogout() {
             class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
             :class="route.name === item.route ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-700 hover:text-white'"
           >
-            <span>{{ item.icon }}</span>
+            <component :is="item.icon" class="w-5 h-5 shrink-0" />
             {{ item.name }}
           </router-link>
         </nav>
@@ -55,7 +67,8 @@ async function handleLogout() {
           <button
             @click="handleLogout"
             class="w-full flex items-center gap-3 px-3 py-2 5 rounded-xl text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors">
-            <span>⏻</span> Logout
+            <PowerIcon class="w-5 h-5 shrink-0" />
+            Logout
           </button>
          </div>
      </aside>
