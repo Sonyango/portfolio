@@ -1,6 +1,7 @@
 <script setup>
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import ToastNotification from '@/components/admin/ToastNotification.vue';
 import {
   Squares2X2Icon,
   FolderOpenIcon,
@@ -38,6 +39,7 @@ async function handleLogout() {
 
 <template>
   <div class="min-h-screen bg-slate-900 flex">
+    <ToastNotification />
 
     <!-- Sidebar -->
      <aside class="w-64 bg-slate-800 border-r border-slate-700 flex flex-col fixed h-full">
