@@ -8,7 +8,6 @@ import { useApi } from '@/composables/useApi';
 import { useUiStore } from '@/stores/uiStore';
 import { useSlug } from '@/composables/useSlug';
 import { XMarkIcon, PhotoIcon } from '@heroicons/vue/24/outline';
-import FormTextarea from '@/components/admin/FormTextarea.vue';
 
 const props = defineProps({ post: { type: Object, default: null } })
 const emit  = defineEmits(['saved', 'close'])

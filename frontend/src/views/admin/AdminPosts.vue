@@ -7,7 +7,6 @@ import AdminPostForm from '@/components/admin/AdminPostForm.vue';
 import { useApi } from '@/composables/useApi';
 import { useUiStore } from '@/stores/uiStore';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/vue/24/outline';
-import ConfirmModal from '@/components/admin/ConfirmModal.vue';
 
 const { get, del } = useApi()
 const uiStore   = useUiStore()
