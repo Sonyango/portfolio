@@ -34,7 +34,7 @@ const routes = [
   { path: '/admin/projects', name: 'admin.projects', component: AdminProjects, meta: { requiresAuth: true } },
   { path: '/admin/posts', name: 'admin.posts', component: AdminPosts, meta: { requiresAuth: true } },
   { path: '/admin/skills', name: 'admin.skills', component: AdminSkills, meta: { requiresAuth: true } },
-  { path: '/admin/experiences', name: 'admin.experience', component: AdminExperiences, meta: { requiresAuth: true } },
+  { path: '/admin/experiences', name: 'admin.experiences', component: AdminExperiences, meta: { requiresAuth: true } },
   { path: '/admin/services', name: 'admin.services', component: AdminServices, meta: { requiresAuth: true } },
   { path: '/admin/settings', name: 'admin.settings', component: AdminSettings, meta: { requiresAuth: true } },
   { path: '/admin/messages', name: 'admin.messages', component: AdminMessages, meta: { requiresAuth: true } },

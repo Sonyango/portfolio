@@ -124,7 +124,7 @@ onMounted(fetchSkills)
             <p class="text-white font-medium">{{ skill.name }}</p>
             <p class="text-slate-400 text-xs mt-0.5">{{ skill.category }}</p>
           </div>
-          <dv class="flex gap-1">
+          <div class="flex gap-1">
             <button @click="openEdit(skill)"
               class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700
                      rounded-lg transition-colors text-xs">
@@ -135,7 +135,7 @@ onMounted(fetchSkills)
                      rounded-lg transition-colors">
               <TrashIcon class="w-4 h-4" />
             </button>
-          </dv>
+          </div>
         </div>
         <div class="w-full bg-slate-700 rounded-full h-1.5">
           <div

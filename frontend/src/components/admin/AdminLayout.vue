@@ -24,7 +24,7 @@ const navItems = [
   { name: 'Projects', route: 'admin.projects', icon: FolderOpenIcon },
   { name: 'Blog Posts', route: 'admin.posts', icon: PencilSquareIcon },
   { name: 'Skills', route: 'admin.skills', icon: BoltIcon },
-  { name: 'Experience', route: 'admin.experience', icon: BriefcaseIcon },
+  { name: 'Experience', route: 'admin.experiences', icon: BriefcaseIcon },
   { name: 'Services', route: 'admin.services', icon: WrenchScrewdriverIcon },
   { name: 'Media', route: 'admin.media', icon: PhotoIcon },
   { name: 'Messages', route: 'admin.messages', icon: EnvelopeIcon },

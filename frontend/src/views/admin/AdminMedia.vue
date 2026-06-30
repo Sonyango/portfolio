@@ -4,7 +4,7 @@ import AdminLayout from '@/components/admin/AdminLayout.vue'
 <template>
   <AdminLayout>
     <div>
-      <h2 class="text-2xl font-bold text-white mb-2">AdminMedia</h2>
+      <h2 class="text-2xl font-bold text-white mb-2">Admin Media</h2>
       <p class="text-slate-400">Coming in Sprint 4.</p>
     </div>
   </AdminLayout>
