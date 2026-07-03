@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\SkillController as AdminSkillController;
 use App\Http\Controllers\Admin\ExperienceController as AdminExperienceController;
 use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
+use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\TagController as AdminTagController;
@@ -96,6 +97,11 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     // Settings
     Route::get('/settings',  [AdminSettingController::class, 'index']);
     Route::put('/settings',  [AdminSettingController::class, 'update']);
+
+    // Media
+    Route::get('/media', [AdminMediaController::class, 'index']);
+    Route::post('/media', [AdminMediaController::class, 'store']);
+    Route::delete('/media/{media}', [AdminMediaController::class, 'destroy']);
 
     // Messages
     Route::get('/messages',                      [MessageController::class, 'index']);
