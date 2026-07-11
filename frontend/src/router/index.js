@@ -7,6 +7,8 @@ const HomeView = () => import('@/views/public/HomeView.vue')
 const ProjectsView = () => import('@/views/public/ProjectsView.vue')
 const BlogView = () => import('@/views/public/BlogView.vue')
 const ContactView = () => import('@/views/public/ContactView.vue')
+const ProjectDetail = () => import('@/views/public/ProjectDetai.vue')
+const PostDetail  = () => import('@/views/public/PostDetail.vue')
 
 // Admin views (lazy loaded)
 const AdminLogin = () => import('@/views/admin/AdminLogin.vue')
@@ -26,6 +28,8 @@ const routes = [
   { path: '/projects',  name: 'projects', component:  ProjectsView  },
   { path: '/blog',  name: 'blog', component:  BlogView  },
   { path: '/contact', name: 'contact',  component:  ContactView },
+  { path: '/projects/:slug', name: 'project.detail', component: ProjectDetail },
+  { path: '/blog/:slug',  name: 'post.detail',  component: PostDetail },
 
   // **** Admin routes (requires auth) ********
   { path: '/admin/login', name: 'admin.login',  component:  AdminLogin, meta: { guestOnly: true }},
