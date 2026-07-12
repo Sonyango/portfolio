@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useSettingsStore } from '@/stores/settingsStore';
 import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline';
+import ToastNotification from '@/components/admin/ToastNotification.vue';
 
 const settingsStore = useSettingsStore()
 const mobileOpen    = ref(false)
@@ -16,7 +17,7 @@ const navLinks = [
 
 <template>
   <div class="min-h-screen bg-slate-950 text-white">
-
+    <ToastNotification />
     <!-- Navbar -->
      <header class="fixed top-0 left-0 right-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800">
       <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">

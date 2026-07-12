@@ -7,7 +7,7 @@ const HomeView = () => import('@/views/public/HomeView.vue')
 const ProjectsView = () => import('@/views/public/ProjectsView.vue')
 const BlogView = () => import('@/views/public/BlogView.vue')
 const ContactView = () => import('@/views/public/ContactView.vue')
-const ProjectDetail = () => import('@/views/public/ProjectDetai.vue')
+const ProjectDetail = () => import('@/views/public/ProjectDetail.vue')
 const PostDetail  = () => import('@/views/public/PostDetail.vue')
 
 // Admin views (lazy loaded)
