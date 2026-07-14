@@ -47,7 +47,7 @@ async function handleLogout() {
       <!-- Brand -->
        <div class="px-6 py-5 border-b border-slate-700">
         <h1 class="text-lg font-bold text-white">Portfolio Admin</h1>
-        <p class="text-xs text-slate-400 mt-0 5">{{ authStore.user?.name }}</p>
+        <p class="text-xs text-slate-400 mt-0.5">{{ authStore.user?.name }}</p>
        </div>
 
        <!-- Navigation -->
@@ -68,7 +68,7 @@ async function handleLogout() {
          <div class="px-3 py-4 border-t border-slate-700">
           <button
             @click="handleLogout"
-            class="w-full flex items-center gap-3 px-3 py-2 5 rounded-xl text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors">
+            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors">
             <PowerIcon class="w-5 h-5 shrink-0" />
             Logout
           </button>

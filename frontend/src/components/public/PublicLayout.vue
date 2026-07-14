@@ -30,13 +30,13 @@ const navLinks = [
         </router-link>
 
         <!-- Desktop nav -->
-         <nav class="hidden md:flex items-center ga-6">
+         <nav class="hidden md:flex items-center ga-8">
           <router-link
             v-for="link in navLinks"
             :key="link.to"
             :to="link.to"
             class="text-sm font-medium text-slate-400 hover:text-white
-                   transition-colors"
+                   transition-colors px-1"
             active-class="text-white">
             {{ link.label }}
           </router-link>
@@ -44,8 +44,8 @@ const navLinks = [
           <a
             :href="settingsStore.get('cv_url', '#')"
             target="_blank"
-            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white
-                   text-sm font-medium rounded-xl transition-colors"
+            class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white
+                   text-sm font-medium rounded-xl transition-colors ml-2"
           >
             Download CV
           </a>

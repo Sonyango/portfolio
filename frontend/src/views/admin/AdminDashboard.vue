@@ -30,7 +30,7 @@ async function fetchStats() {
   }
 }
 
-const statsCards = [
+const statCards = [
   { label: 'Projects', key: 'projects', icon: FolderOpenIcon,
     color: 'text-indigo-400', bg: 'bg-indigo-500/10', route: 'admin.projects'
   },

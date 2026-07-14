@@ -15,11 +15,11 @@ const emit = defineEmits(['update:modelValue'])
   <div>
     <label class="block text-sm font-medium text-slate-300 mb-1">
       {{ label }}
-      <span v-if="required" class="text-red-400 ml-0 5">*</span>
+      <span v-if="required" class="text-red-400 ml-0.5">*</span>
     </label>
 
     <input
-      :type="text"
+      :type="type"
       :value="modelValue"
       :placeholder="placeholder"
       @input="emit('update:modelValue', $event.target.value)"

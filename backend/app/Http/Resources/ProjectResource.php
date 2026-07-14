@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\ProjectImageResource;
 
 class ProjectResource extends JsonResource
 {
@@ -17,7 +18,7 @@ class ProjectResource extends JsonResource
         return [
             'id'            => $this->id,
             'title'         => $this->title,
-            'slug'          => $this-> slug,
+            'slug'          => $this->slug,
             'description'   => $this->description,
             'content'       => $this->content,
             'tech_stack'    => $this->tech_stack ?? [],
@@ -30,7 +31,7 @@ class ProjectResource extends JsonResource
             'featured'      => $this->featured,
             'order'         => $this->order,
             'published'     => $this->published,
-            'images'        => $this-> ProjectImageResource::collection(
+            'images'        => ProjectImageResource::collection(
                                     $this->whenLoaded('images')
                             ),
             'created_at'    => $this->created_at?->toDateString(),
