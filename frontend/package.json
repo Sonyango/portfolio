@@ -21,6 +21,7 @@
     "@tiptap/pm": "^3.27.1",
     "@tiptap/starter-kit": "^3.27.1",
     "@tiptap/vue-3": "^3.27.1",
+    "@unhead/vue": "^3.1.8",
     "axios": "^1.17.0",
     "dompurify": "^3.4.11",
     "pinia": "^3.0.4",

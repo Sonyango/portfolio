@@ -1,8 +1,15 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useSeo } from '@/composables/useSeo';
 import PublicLayout from '@/components/public/PublicLayout.vue';
 import ProjectCard from '@/components/public/ProjectCard.vue';
 import { useProjectsStore } from '@/stores/projectsStore';
+
+useSeo({
+  title:        'Projects',
+  description:  'A showcase of my web development and ICT projects.',
+  url:          window.location.href,
+})
 
 const projectsStore = useProjectsStore()
 const activeFilter  = ref('all')
@@ -73,7 +80,7 @@ onMounted(() => projectsStore.fetchProjects())
             :project="project"
            />
          </div>
-         
+
       </div>
     </section>
   </PublicLayout>

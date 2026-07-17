@@ -10,6 +10,13 @@ import {
   MapPinIcon,
   PaperAirplaneIcon,
  } from '@heroicons/vue/24/outline';
+ import { useSeo } from '@/composables/useSeo';
+
+ useSeo({
+  title:        'Contact',
+  description:  'Get in touch for freelance, collaboraton, or job opportunities.',
+  url:          window.location.href,
+ })
 
 const uiStore         = useUiStore()
 const settingsStore   = useSettingsStore()

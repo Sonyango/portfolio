@@ -1,5 +1,7 @@
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, watch } from 'vue';
+import { useSeo } from '@/composables/useSeo';
+import { useHead } from '@unhead/vue';
 import { useRoute, useRouter } from 'vue-router';
 import PublicLayout from '@/components/public/PublicLayout.vue';
 import { useProjectsStore } from '@/stores/projectsStore';
@@ -12,6 +14,22 @@ import {
 const route         = useRoute()
 const router        = useRouter()
 const projectsStore = useProjectsStore()
+
+// Update meta tags when project loads
+watch(() => projectsStore.current, (project) => {
+  if (project) {
+    useHead({
+      title: `${project.title} | Stephen's Portfolio`,
+      meta: [
+        { name: 'description',        content: project.description },
+        { property: 'og:title',       content: project.title },
+        { property: 'og:description', content: project.description },
+        { property: 'og:image',       content: project.thumbnail || '' },
+        { property: 'og:type',        content: 'article' },
+      ],
+    })
+  }
+})
 </script>
 
 <template>
@@ -113,7 +131,7 @@ const projectsStore = useProjectsStore()
                   </div>
                  </div>
           </template>
-          
+
       </div>
     </section>
   </PublicLayout>

@@ -5,10 +5,27 @@ import PublicLayout from '@/components/public/PublicLayout.vue';
 import { usePostsStore } from '@/stores/postsStore';
 import { ArrowLeftIcon } from '@heroicons/vue/24/outline';
 import DOMPurify from 'dompurify';
+import { useHead } from '@unhead/vue';
 
 const route       = useRoute()
 const router      = useRouter()
 const postsStore  = usePostsStore()
+
+watch(() => postsStore.current, (post) => {
+  if (post) {
+    useHead({
+      title:  `${post.title} | Stephen's Portfolio`,
+      meta: [
+        { name: 'description',        content:  post.excerpt || post.title },
+        { property: 'og:title',       content:  post.title },
+        { property: 'og:description', content:  post.excerpt || '' },
+        { property: 'og:image',       content:  post.thumbnail || '' },
+        { property: 'og:type',        content:  'article' },
+        { property: 'article:published_time', content: post.published_at },
+      ],
+    })
+  }
+})
 
 const safeContent = computed(() => {
   if (!postsStore.current?.content) return ''

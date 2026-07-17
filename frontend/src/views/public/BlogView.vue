@@ -5,6 +5,13 @@ import PublicLayout from '@/components/public/PublicLayout.vue';
 import PostCard from '@/components/public/PostCard.vue';
 import { usePostsStore } from '@/stores/postsStore';
 import api from '@/api/index.js';
+import { useSeo } from '@/composables/useSeo';
+
+useSeo({
+  title:        'Blog',
+  description:  'Artcles on webdevelopment, ICT, and software engineering.',
+  url:          window.location.href,
+})
 
 const route         = useRoute()
 const router        = useRouter()
@@ -139,7 +146,7 @@ onMounted(fetchFilters)
                     </button>
                   </div>
                 </div>
-                
+
             </div>
          </div>
       </div>
