@@ -3,7 +3,10 @@ import { ref } from 'vue'
 import { useSettingsStore } from '@/stores/settingsStore';
 import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline';
 import ToastNotification from '@/components/admin/ToastNotification.vue';
+import { useDarkMode } from '@/composables/useDarkMode';
+import BackToTop from '@/components/public/BackToTop.vue';
 
+const { isDark, toggle } = useDarkMode()
 const settingsStore = useSettingsStore()
 const mobileOpen    = ref(false)
 
@@ -40,6 +43,15 @@ const navLinks = [
             active-class="text-white">
             {{ link.label }}
           </router-link>
+
+          <!-- Dark mode toggle -->
+           <button
+              @click="toggle"
+              class="p-2 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-800"
+              :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'">
+              <span v-if="isDark">☀️</span>
+              <span v-else>🌙</span>
+            </button>
 
           <a
             :href="settingsStore.get('cv_url', '#')"
@@ -126,5 +138,6 @@ const navLinks = [
         </div>
       </div>
      </footer>
+     <BackToTop />
   </div>
 </template>

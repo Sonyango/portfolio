@@ -1,36 +1,33 @@
-import { useHead } from "@unhead/vue";
-
 export function useSeo({
   title       = 'Portfolio',
   description = 'Full Stack Developer & ICT Professional',
   image       = '',
   url         = '',
-  type        = 'website',
 } = {}) {
   const siteName  = 'Stephen\'s Portfolio'
   const fullTitle = title === siteName ? title : `${title} | ${siteName}`
 
-  useHead({
-    title: fullTitle,
-    meta: [
-      { name: 'description',  content: description },
+  document.title = fullTitle
 
-      //Open graph
-      { property: 'og:title',       content: fullTitle },
-      { property: 'og:description', content:  description },
-      { property: 'og:type',        content:  type },
-      { property: 'og:url',         content:  url },
-      { property: 'og:image',       content:  image },
-      { property: 'og:site_name',   content:  siteName },
+  function setMeta(attr, attrVal, content) {
+    let el = document.querySelector(`meta[${attr}="${attrVal}"]`)
+    if (!el) {
+      el = document.createElement('meta')
+      el.setAttribute(attr, attrVal)
+      document.head.appendChild(el)
+    }
+    el.setAttribute('content', content)
+  }
 
-      // Twitter card
-      { name: 'twitter:card',         content: 'summary_large_image' },
-      { name: 'twitter:title',        content: fullTitle },
-      { name: 'twitter:description',  content: description },
-      { name: 'twitter:image',        content: image },
-    ],
-    link: [
-      { rel: 'canonical', href: url },
-    ],
-  })
+  setMeta('name',     'description',         description)
+  setMeta('property', 'og:title',            fullTitle)
+  setMeta('property', 'og:description',      description)
+  setMeta('property', 'og:type',             'website')
+  setMeta('property', 'og:url',              url || window.location.href)
+  setMeta('property', 'og:image',            image)
+  setMeta('property', 'og:site_name',        siteName)
+  setMeta('name',     'twitter:card',        'summary_large_image')
+  setMeta('name',     'twitter:title',       fullTitle)
+  setMeta('name',     'twitter:description', description)
+  setMeta('name',     'twitter:image',       image)
 }
