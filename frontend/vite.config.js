@@ -26,5 +26,17 @@ export default defineConfig({
           changeOrigin: true
         }
       }
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vue-vendor':     ['vue', 'vue-router', 'pinia'],
+            'ui-vendor':      ['@heroicons/vue'],
+            'editor-vendor':  ['@tiptap/vue-3', '@tiptap/starter-kit'],
+          }
+        }
+      },
+      chunkSizeWarningLimit: 600,
     }
 })
