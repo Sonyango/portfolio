@@ -19,7 +19,7 @@ class ProjectController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request-validate([
+        $data = $request->validate([
             'title'         => 'required|string|max:255',
             'slug'          => 'nullable|string|unique:projects,slug',
             'description'   => 'required|string',
