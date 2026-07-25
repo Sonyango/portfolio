@@ -6,7 +6,7 @@ const settingsStore = useSettingsStore()
 </script>
 
 <template>
-  <section id="about" class="py-24 px-4">
+  <section id="about" class="py-24 px-4 bg-slate-50 dark:bg-slate-900/50">
     <div class="max-w-6xl mx-auto">
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -16,10 +16,10 @@ const settingsStore = useSettingsStore()
           <p class="text-indigo-400 text-sm font-semibold tracking-widest uppercase mb-3">
             About Me
           </p>
-          <h2 class="font-display text-4xl font-bold text-white mb-6">
+          <h2 class="font-display text-4xl font-bold text-slate-900 dark:text-white mb-6">
             Passionate about building great software
           </h2>
-          <div class="text-slate-400 leading-relaxed space-y-4">
+          <div class="text-slate-600 dark:text-slate-400 leading-relaxed space-y-4">
             <p v-for="(paragraph, i) in settingsStore
                   .get('about_text', 'I am a software developer.')
                   .split('\n').filter(p => p.trim())"
@@ -50,7 +50,7 @@ const settingsStore = useSettingsStore()
               { label: 'Focus',  value: 'Full Stack + ICT' },
             ]"
             :key="stat.label"
-            class="bg-slate-900 border border-slate-800 rounded-2xl p-5" >
+            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5" >
             <p class="text-slate-500 text-xs font-medium uppercase tracking-wider mb-1">
               {{ stat.label }}
             </p>

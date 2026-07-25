@@ -16,7 +16,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section id="skills" class="py-24 px-4 bg-slate-900/50">
+  <section id="skills" class="py-24 px-4 bg-slate-50 dark:bg-slate-900/50">
     <div class="max-w 6xl mx-auto">
 
       <div class="text-center mb-16">
@@ -43,15 +43,15 @@ onMounted(async () => {
             <div
               v-for="skill in skills"
               :key="skill.id"
-              class="bg-slate-900 border border-slate-800 rounded-2xl p-4
+              class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4
                      hover:border-indigo-500/30 transition-colors">
               <div class="flex items-center justify-between mb-3">
-                <span class="text-white font-medium text-sm">{{ skill.name }}</span>
+                <span class="text-slate-900 dark:text-white font-medium text-sm">{{ skill.name }}</span>
                 <span class="text-indigo-400 text-xs font-semibold">
                   {{ skill.proficiency }}%
                 </span>
               </div>
-              <div class="w-full bg-slate-800 rounded-full h-1.5">
+              <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5">
                 <div
                   class="bg-linear-to-r from-indigo-500 to-violet-500
                          h-1.5 rounded-full transition-all duration-700"

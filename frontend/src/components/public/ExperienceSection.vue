@@ -16,7 +16,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section id="experience" class="py-24 px-4">
+  <section id="experience" class="py-24 px-4 bg-white dark:bg-slate-950">
     <div class="max-w-4xl mx-auto">
 
       <div class="text-center mb-16">
@@ -41,7 +41,7 @@ onMounted(async () => {
        <div v-else class="relative">
 
         <!-- Vertical line -->
-         <div class="absolute left-4 top-0 bottom-0 w-px bg-slate-800" />
+         <div class="absolute left-4 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-800" />
          <div class="space-y-8">
           <div v-for="exp in experiences" :key="exp.id" class="relative pl-12">
 
@@ -51,10 +51,10 @@ onMounted(async () => {
              </div>
 
              <!-- Card -->
-              <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/30 transition-colors">
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 hover:border-indigo-500/30 transition-colors">
                 <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
                   <div>
-                    <h3 class="text-white font-semibold text-lg">{{ exp.role }}</h3>
+                    <h3 class="text-slate-900 dark:text-white font-semibold text-lg">{{ exp.role }}</h3>
                     <p class="text-indigo-400 font-medium">{{ exp.company }}</p>
                   </div>
                   <div class="text-right shrink-0">
@@ -64,7 +64,7 @@ onMounted(async () => {
                     </p>
                   </div>
                 </div>
-                <p v-if="exp.description" class="text-slate-400 text-sm leading-relaxed">
+                <p v-if="exp.description" class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                   {{ exp.description }}
                 </p>
                 <span class="inline-block mt-3 px-2.5 py-1 bg-green-500/10 text-green-400 text-xs rounded-full font-medium">

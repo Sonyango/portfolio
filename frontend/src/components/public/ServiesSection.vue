@@ -16,7 +16,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section id="services" class="py-24 px-4 bg-slate-900/50">
+  <section id="services" class="py-24 px-4 bg-slate-50 dark:bg-slate-900/50">
     <div class="max-w-6xl mx-auto">
 
       <div class="text-center mb-16">
@@ -41,14 +41,14 @@ onMounted(async () => {
         <div
           v-for="service in services"
           :key="services.id"
-          class="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/30 transition-all group">
+          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 hover:border-indigo-500/30 transition-all group">
           <!-- Icon Placeholder-->
            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-5 group-hover:bg-indigo-500/20 transition-colors">
             <span class="text-indigo-400 text-xl">⚡</span>
            </div>
 
-           <h3 class="text-white font-semibold text-lg mb-2">{{ service.title }}</h3>
-           <p class="text-slate-400 text-sm leading-relaxed mb-4">
+           <h3 class="text-slate-900 dark:text-white font-semibold text-lg mb-2">{{ service.title }}</h3>
+           <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
             {{ service.description }}
            </p>
 
@@ -67,7 +67,7 @@ onMounted(async () => {
           Work With Me →
         </router-link>
        </div>
-       
+
     </div>
   </section>
 </template>

@@ -6,7 +6,7 @@ const settingsStore = useSettingsStore()
 </script>
 
 <template>
-  <section class="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+  <section class="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-white dark:bg-slate-950">
 
     <!-- Background glow-->
      <div class="absolute inset-0 overflow-hidden pointer-events-none">
@@ -26,12 +26,12 @@ const settingsStore = useSettingsStore()
         </div>
 
       <!-- Main heading -->
-       <h1 class="font-display text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+       <h1 class="font-display text-5xl md:text-7xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">
         {{ settingsStore.get('hero_title', 'Hi, I\'m a Full Stack Developer') }}
        </h1>
 
        <!-- Subtitle -->
-        <p class="text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+        <p class="text-xl text-slate-600 dark:text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
           {{ settingsStore.get('hero_subtitle',
           'I build modern web applications and ICT solutions.') }}
         </p>

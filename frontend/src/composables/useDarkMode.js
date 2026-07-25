@@ -1,19 +1,9 @@
-import { ref, watch, onMounted } from "vue";
+import { ref } from "vue";
 
 const isDark = ref(false)
+let initialized = false
 
 export function useDarkMode() {
-  onMounted(() => {
-    const stored = localStorage.getItem('darkMode')
-    isDark.value = stored ? JSON.parse(stored) : true
-    applyDarkMode(isDark.value)
-  })
-
-  function toggle() {
-    isDark.value = !isDark.value
-    localStorage.setItem('darkMode', JSON.stringify(isDark.value))
-    applyDarkMode(isDark.value)
-  }
 
   function applyDarkMode(dark) {
     if (dark) {
@@ -21,9 +11,36 @@ export function useDarkMode() {
     } else {
       document.documentElement.classList.remove('dark')
     }
+    isDark.value = dark
   }
 
-  watch(isDark, applyDarkMode)
+  function init() {
+    if (initialized) return
+    initialized = true
 
-  return { isDark, toggle }
+    //Check localStorage first
+    const stored = localStorage.getItem('portfolio-dark-mode')
+
+    if (stored !== null) {
+      // Use stored preference
+      applyDarkMode(stored === 'true')
+    } else {
+      // Default to dark mode
+      applyDarkMode(true)
+    }
+  }
+
+  function toggle() {
+    const newValue = !isDark.value
+    localStorage.setItem('portfolio-dark-mode', String(newValue))
+    applyDarkMode(newValue)
+  }
+
+  function setDark(value) {
+    localStorage.setItem('portfolio-dark-mode', String(value))
+    applyDarkMode(value)
+  }
+
+  return { isDark, init, toggle, setDark }
+
 }
