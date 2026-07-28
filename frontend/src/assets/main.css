@@ -9,3 +9,17 @@
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
 }
+
+/* ---Light mode custom properties-----  */
+:root {
+  --lm-bg:            #0B2B26;
+  --lm-bg-secondary:  #0D3530;
+  --lm-bg-tertiary:   #0F3D37;
+  --lm-heading:       #00F0A0;
+  --lm-accent:        #00F0A0;
+  --lm-body:          #B2DFDB;
+  --lm-muted:         #7BB8B2;
+  --lm-border:        #1A4A42;
+  --lm-white:         #FFFFFF;
+  --lm-badge-bg:      #00F0A020;
+}
