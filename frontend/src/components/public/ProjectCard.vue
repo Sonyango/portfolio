@@ -7,19 +7,21 @@ defineProps({
 </script>
 
 <template>
-  <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-indigo-500/40 transition-all group">
+  <div class="rounded-2xl overflow-hidden border transition-all group dark:bg-slate-900 dark:border-slate-800
+             dark:hover:border-indigo-500/40 bg-[#0B2B26] border-[#1A4A42] hover:border-[#00F0A0]/40">
 
     <!-- Thumbnail-->
-     <div class="aspect-video bg-slate-800 overflow-hidden">
+     <div class="aspect-video overflow-hidden dark:bg-slate-800 bg-[#0D3530]">
       <img
         v-if="project.thumbnail"
         :src="project.thumbnail"
         :alt="project.title"
-        class="w-full h-full object-cover transition-transform duration-500"
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         loading="lazy"
       />
       <div v-else
-        class="w-full h-full flex items-center justify-center text-slate-600 text-sm">
+        class="w-full h-full flex items-center justify-center text-sm
+                dark:text-slate-600 text-[#1A4A42]">
         No preview
       </div>
      </div>
@@ -29,17 +31,19 @@ defineProps({
 
         <!-- Category + featured -->
          <div class="flex items-center justify-between mb-2">
-          <span class="text-indigo-400 text-xs font-semibold uppercase tracking-wider">
+          <span class="text-xs font-semibold uppercase tracking-wider
+                      dark:text-indigo-400 text-[#00F0A0]">
             {{ project.category || 'Project' }}
           </span>
           <span v-if="project.featured"
-            class="px-2 py-0.5 bg-indigo-500/10 text-indigo-400 text-xs rounded-full font-medium">
+            class="px-2 py-0.5 text-xs rounded-full font-medium border dark:bg-indigo-500/10 dark:text-indigo-400
+                  dark:border-indigo-500/20 bg-[#00F0A0]/10 text-[#00F0A0] border-[#00F0A0]/30">
             Featured
           </span>
          </div>
 
-         <h3 class="text-white font-semibold text-lg mb-2">{{ project.title }}</h3>
-         <p class="text-slate-400 text-sm leading-relaxed mb-4 line-clamp-2">
+         <h3 class="font-semibold text-lg mb-2 dark:text-white text-[#00F0A0]">{{ project.title }}</h3>
+         <p class="text-sm leading-relaxed mb-4 line-clamp-2 dark:text-slate-400 text-[#B2DFDB]">
           {{ project.description }}
          </p>
 
@@ -48,12 +52,14 @@ defineProps({
             <span
               v-for="tech in (project.tech_stack ?? []).slice(0, 4)"
               :key="tech"
-              class="px-2.5 py-1 bg-slate-800 text-slate-300 text-xs rounded-lg border border-slate-700">
+              class="px-2.5 py-1 text-xs rounded-lg border dark:bg-slate-800 dark:text-slate-300
+                    dark:border-slate-700 bg-[#1A4A42] text-[#B2DFDB] border-[#1A4A42]">
               {{ tech }}
             </span>
             <span
               v-if="(project.tech_stack ?? []).length > 4"
-              class="px-2.5 py-1 bg-slate-800 text-slate-400 text-xs rounded-lg border border-slate-700">
+              class="px-2.5 py-1 text-xs rounded-lg border dark:bg-slate-800 dark:text-slate-400
+                    dark:border-slate-700 bg-[#1A4A42] text-[#7BB8B2] border-[#1A4A42]">
               +{{ project.tech_stack.length -4  }} more
             </span>
           </div>
@@ -64,7 +70,8 @@ defineProps({
               v-if="project.live_url"
               :href="project.live_url"
               target="_blank"
-              class="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-xl transition-colors">
+              class="flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-xl transition-colors
+                    dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:text-white bg-[#00F0A0] hover:bg-white text-[#0B2B26]">
               <ArrowTopRightOnSquareIcon class="w-3.5 h-3.5" />
               Live Demo
             </a>
@@ -72,13 +79,15 @@ defineProps({
               v-if="project.github_url"
               :href="project.github_url"
               target="_blank"
-              class="flex items-center gap-1.5 px-4 py-2 bg-indigo-700 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-medium rounded-xl transition-colors">
+              class="flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-xl transition-colors border dark:border-slate-700 dark:hover:border-slate-500
+                    dark:text-slate-300 dark:hover:text-white border-[#1A4A42] hover:border-[#00F0A0]/50 text-[#B2DFDB] hover:text-[#00F0A0]">
               <CodeBracketIcon class="w-3.5 h-3.5" />
               GitHub
             </a>
             <router-link
               :to="'/projects/' + project.slug"
-              class="flex items-center gap-1.5 px-4 py-2 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-medium rounded-xl transition-colors ml-auto">
+              class="flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-xl transition-colors border ml-auto dark:border-slate-700 dark:hover:border-slate-500
+                    dark:text-slate-300 dark:hover:text-white border-[#1A4A42] hover:border-[#00F0A0]/50 text-[#B2DFDB] hover:text-[#00F0A0]">
               Details →
             </router-link>
            </div>

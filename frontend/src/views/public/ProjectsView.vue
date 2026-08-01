@@ -32,18 +32,21 @@ onMounted(() => projectsStore.fetchProjects())
 
 <template>
   <PublicLayout>
-    <section class="py-24 px-4">
+    <section class="py-24 px-4 dark:bg-slate-950 bg-[#0B2B26]">
       <div class="max-w-6xl mx-auto">
 
         <!-- header -->
          <div class="text-center mb-16">
-          <p class="text-indigo-400 text-sm font-semibold tracking-widest uppercase mb-3">
+          <p class="text-sm font-semibold tracking-widest uppercase mb-3
+                    dark:text-indigo-400 text-[#00F0A0]">
             My Work
           </p>
-          <h1 class="font-display text-5xl font-bold text-white mb-4">
+          <h1 class="font-display text-5xl font-bold mb-4
+                     dark:text-white text-[#00F0A0]">
             Projects
           </h1>
-          <p class="text-slate-400 max-w-xl mx-auto">
+          <p class="max-w-xl mx-auto
+                    dark:text-slate-400 text-[#B2DFDB]">
             A collection of things I've built from web apps to ICT solutions.
           </p>
          </div>
@@ -56,20 +59,20 @@ onMounted(() => projectsStore.fetchProjects())
               @click="activeFilter = cat"
               :class="['px-5 py-2 rounded-full text-sm font-medium transition-colors capitalize',
               activeFilter === cat
-                ? 'bg-indigo-600 text-white'
-                : 'border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500']">
+                ? 'dark:bg-indigo-600 dark:text-white bg-[#00F0A0] text-[#0B2B26]'
+                : 'border dark:border-slate-700 dark:text-slate-400 dark:hover:text-white dark:hover:border-slate-500 border-[#1A4A42] text-[#B2DFDB] hover:text-[#00F0A0] hover:border-[#00F0A0]/50']">
                 {{ cat }}
             </button>
           </div>
 
         <!-- Loadng -->
-         <div v-if="projectsStore.loading" class="text-center text-slate-400 py-20">
+         <div v-if="projectsStore.loading" class="text-center dark:text-slate-400 text-[#B2DFDB] py-20">
           Loading projects...
         </div>
 
         <!-- Empty -->
          <div v-else-if="filtered.length === 0"
-          class="text-center text-slate-400 py-20">
+          class="text-center dark:text-slate-400 text-[#B2DFDB] py-20">
           No projects found.
         </div>
 

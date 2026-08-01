@@ -50,16 +50,19 @@ onMounted(fetchFilters)
 
 <template>
   <PublicLayout>
-    <section class="py-24 px-4">
+    <section class="py-24 px-4 dark:bg-slate-950 bg-[#0B2B26]">
       <div class="max-w-6xl mx-auto">
 
         <!-- Header -->
          <div class="text-center mb-16">
-          <p class="text-indigo-400 text-sm font-semibold tracking-widest uppercase mb-3">
+          <p class="text-sm font-semibold tracking-widest uppercase mb-3
+                    dark:text-indigo-400 text-[#00F0A0]">
             Thoughts & Tutorials
           </p>
-          <h1 class="font-display text-5xl font-bold text-white mb-4">Blog</h1>
-          <p class="text-slate-400 max-w-xl mx-auto">
+          <h1 class="font-display text-5xl font-bold mb-4
+                     dark:text-white text-[#00F0A0]">Blog</h1>
+          <p class="max-w-xl mx-auto
+                    dark:text-slate-400 text-[#B2DFDB]">
             Articles on web development, ICT, and software engineering.
           </p>
          </div>
@@ -69,22 +72,28 @@ onMounted(fetchFilters)
            <div class="flex-1">
             <!-- Active filter banner -->
              <div v-if="route.query.category || route.query.tag"
-                class="flex items-center gap-3 mb-6 px-4 py-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-sm">
-                <span class="text-indigo-400">
+                class="flex items-center gap-3 mb-6 px-4 py-3 rounded-xl
+                     text-sm border
+                     dark:bg-indigo-500/10 dark:border-indigo-500/20
+                     dark:text-indigo-400
+                     bg-[#00F0A0]/10 border-[#00F0A0]/20 text-[#00F0A0]">
+                <span>
                   Filtering by:
                   <strong>{{ route.query.category || route.query.tag }}</strong>
                 </span>
                 <button @click="clearFilters"
-                  class="ml-auto text-slate-400 hover:text-white text-xs">
+                  class="ml-auto text-xs transition-colors
+                       dark:text-slate-400 dark:hover:text-white
+                       text-[#7BB8B2] hover:text-[#00F0A0]">
                   Clear
                 </button>
               </div>
 
-              <div v-if="postsStore.loading" class="text-center text-slate-400 py-20">
+              <div v-if="postsStore.loading" class="text-center dark:text-slate-400 text-[#B2DFDB] py-20">
                 Loading posts...
               </div>
 
-              <div v-else-if="postsStore.posts.length === 0" class="text-center text-slate-400 py-20">
+              <div v-else-if="postsStore.posts.length === 0" class="text-center dark:text-slate-400 text-[#B2DFDB] py-20">
                 No posts found.
               </div>
 
@@ -104,8 +113,8 @@ onMounted(fetchFilters)
                   @click="router.push({ query: { ...route.query, page } })"
                   :class="['w-10 h-10 rounded-xl text-sm font-medium transition-colors',
                   Number(route.query.page || 1) === page
-                    ? 'bg-indigo-600 text-white'
-                    : 'border border-slate-700 text-slate-400 hover:text-white']">
+                    ? 'dark:bg-indigo-600 dark:text-white bg-[#00F0A0] text-[#0B2B26]'
+                    : 'border dark:border-slate-700 dark:text-slate-400 dark:hover:text-white border-[#1A4A42] text-[#B2DFDB] hover:text-[#00F0A0] hover:border-[#00F0A0]/50']">
                     {{ page }}
                 </button>
                </div>
@@ -114,8 +123,12 @@ onMounted(fetchFilters)
            <!-- Sidebar -->
             <div class="hidden lg:block w-64 shrink-0 space-y-6">
               <!-- Categories -->
-               <div v-if="categories.length > 0" class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                <h3 class="text-white font-semibold mb-3 text-sm">Categories</h3>
+               <div v-if="categories.length > 0"
+                  class="rounded-2xl p-5 border
+                     dark:bg-slate-900 dark:border-slate-800
+                     bg-[#0D3530] border-[#1A4A42]">
+                <h3 class="font-semibold mb-3 text-sm
+                         dark:text-white text-[#00F0A0]">Categories</h3>
                 <div class="space-y-1">
                   <button
                       v-for="cat in categories"
@@ -123,25 +136,29 @@ onMounted(fetchFilters)
                       @click="applyFilter('category', cat.slug)"
                       :class="['w-full text-left px-3 py-2 rounded-xl text-sm transition-colors',
                     route.query.category === cat.slug
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800']">
+                      ? 'dark:bg-indigo-600 dark:text-white bg-[#00F0A0]/20 text-[#00F0A0]'
+                      : 'dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 text-[#B2DFDB] hover:text-[#00F0A0] hover:bg-[#1A4A42]']">
                       {{ cat.name }}
                   </button>
                 </div>
                </div>
 
                <!-- Tags -->
-                <div v-if="tags.length > 0" class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                  <h3 class="text-white font-semibold mb-3 text-sm">Tags</h3>
+                <div v-if="tags.length > 0"
+                  class="rounded-2xl p-5 border
+                     dark:bg-slate-900 dark:border-slate-800
+                     bg-[#0D3530] border-[#1A4A42]">
+                  <h3 class="font-semibold mb-3 text-sm
+                           dark:text-white text-[#00F0A0]">Tags</h3>
                   <div class="flex flex-wrap gap-2">
                     <button
                       v-for="tag in tags"
                       :key="tag.id"
                       @click="applyFilter('tag', tag.slug)"
-                      :class="['px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
+                      :class="['px-3 py-1.5 rounded-full text-xs font-medium transition-colors border',
                     route.query.tag === tag.slug
-                      ? 'bg-indigo-600 text-white'
-                      : 'border border-slate-700 text-slate-400 hover:text-white']">
+                      ? 'dark:bg-indigo-600 dark:text-white dark:border-indigo-600 bg-[#00F0A0]/20 text-[#00F0A0] border-[#00F0A0]/40'
+                      : 'dark:border-slate-700 dark:text-slate-400 dark:hover:text-white border-[#1A4A42] text-[#B2DFDB] hover:text-[#00F0A0] hover:border-[#00F0A0]/40']">
                       #{{ tag.name }}
                     </button>
                   </div>

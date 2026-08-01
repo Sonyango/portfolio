@@ -141,8 +141,8 @@ function closeMobile() {
       </main>
 
     <!-- Footer -->
-     <footer class="border-t py-10 mt-20 transition-colors duration-300
-                    dark:border-slate-800 border-[#1A4A42]">
+     <footer class="border-t py-10 transition-colors dark:bg-slate-900
+                   bg-[#0D3530] dark:border-slate-800 border-[#1A4A42]">
       <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
         <p class="text-sm dark:text-slate-400 text-[#7BB8B2]">
           &copy; {{ new Date().getFullYear() }}

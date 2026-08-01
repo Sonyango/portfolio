@@ -25,8 +25,8 @@ export function useDarkMode() {
       // Use stored preference
       applyDarkMode(stored === 'true')
     } else {
-      // Default to dark mode
-      applyDarkMode(true)
+      // Default to light mode
+      applyDarkMode(false)
     }
   }
 

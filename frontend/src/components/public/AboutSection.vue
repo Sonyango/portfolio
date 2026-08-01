@@ -6,7 +6,7 @@ const settingsStore = useSettingsStore()
 </script>
 
 <template>
-  <section id="about" class="py-24 px-4 dark:bg-slate-900/50 bg-[#0D3530]">
+  <section id="about" class="py-24 px-4 dark:bg-slate-900 bg-[#0D3530]">
     <div class="max-w-6xl mx-auto">
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">

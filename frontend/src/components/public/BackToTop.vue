@@ -21,9 +21,11 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
     <button
       v-if="visible"
       @click="scrollToTop"
-      class="fixed bottom-8 right-8 z-50 w-10 h-10 bg-indigo-600
-          hover:bg-indigo-700 text-white rounded-xl shadow-lg
-          flex items-center justify-center transition-colors"
+      class="fixed bottom-8 right-8 z-50 w-10 h-10 rounded-xl shadow-lg
+             flex items-center justify-center transition-colors
+             dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:text-white
+             bg-[#00F0A0] hover:bg-white text-[#0B2B26]
+             border dark:border-transparent border-[#00F0A0]/50"
       title="Back to top">
       <ArrowUpIcon class="w-5 h-5" />
     </button>

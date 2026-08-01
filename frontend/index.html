@@ -10,7 +10,7 @@
      <script>
       (function() {
         const stored  = localStorage.getItem('portfolio-dark-mode')
-        const dark    = stored !== null ? stored === 'true' : true
+        const dark    = stored !== null ? stored === 'true' : false
         if (dark) {
           document.documentElement.classList.add('dark')
         }

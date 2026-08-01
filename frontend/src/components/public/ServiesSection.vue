@@ -16,7 +16,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section id="services" class="py-24 px-4 dark:bg-slate-900/50 bg-[#0D3530]">
+  <section id="services" class="py-24 px-4 dark:bg-slate-900 bg-[#0D3530]">
     <div class="max-w-6xl mx-auto">
 
       <div class="text-center mb-16">
