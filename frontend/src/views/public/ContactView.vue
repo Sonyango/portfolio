@@ -102,7 +102,7 @@ async function handleSubmit() {
                 },
             ].filter(i => i.value)"
             :key="info.label"
-            class="flex items-start gap-4 rounded-2xl p-5 border
+            class="flex items-start gap-4 rounded-2xl p-5 border min-w-0 break-all
                      dark:bg-slate-900 dark:border-slate-800
                      bg-[#0D3530] border-[#1A4A42]">
             <div class="w-10 h-10 rounded-xl flex items-center

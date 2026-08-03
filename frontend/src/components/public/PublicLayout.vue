@@ -23,8 +23,8 @@ function closeMobile() {
 </script>
 
 <template>
-  <div class="min-h-screen transition-color duration-300 bg-slate-950
-              [&:not(.dark)]:bg-[#0B2B26]">
+  <div class="min-h-screen transition-colors duration-300 overflow-x-hidden w-full
+              dark:bg-slate-950 bg-[#0B2B26]">
 
     <ToastNotification />
 

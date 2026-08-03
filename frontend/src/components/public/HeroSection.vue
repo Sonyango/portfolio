@@ -6,12 +6,12 @@ const settingsStore = useSettingsStore()
 </script>
 
 <template>
-  <section class="min-h-screen flex items-center justify-center px-4 relative overflow-hidden
+  <section class="min-h-screen w-full flex items-center justify-center px-4 relative overflow-hidden
                   dark:bg-slate-950 bg-[#0B2B26]">
 
     <!-- Background glow-->
      <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96
+      <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-72 h-72
                 dark:bg-indigo-600/10 bg-[#00F0A0]/5 rounded-full blur-3xl" />
      </div>
 

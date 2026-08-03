@@ -42,7 +42,7 @@ const settingsStore = useSettingsStore()
          </div>
 
         <!-- Stats / info cards -->
-         <div class="grid grid-cols-2 gap-4">
+         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div
             v-for="stat in [
               { label: 'Location', value: settingsStore.get('location', 'Nairobi, Kenya') },
@@ -51,11 +51,11 @@ const settingsStore = useSettingsStore()
               { label: 'Focus',  value: 'Full Stack + ICT' },
             ]"
             :key="stat.label"
-            class="rounded-2xl p-5 border dark:bg-slate-900 dark:border-slate-800 bg-[#0B2B26] border-[#1A4A42]" >
+            class="rounded-2xl p-5 border min-w-0 dark:bg-slate-900 dark:border-slate-800 bg-[#0B2B26] border-[#1A4A42]" >
             <p class="text-xs font-medium uppercase tracking-wider mb-1 dark:text-slate-500 text-[#7BB8B2]">
               {{ stat.label }}
             </p>
-            <p class="font-medium text-sm dark:text-white text-[#B2DFDB]">{{ stat.value }}</p>
+            <p class="font-medium text-sm min-w-0 break-all dark:text-white text-[#B2DFDB]">{{ stat.value }}</p>
         </div>
          </div>
 
