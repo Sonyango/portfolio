@@ -25,10 +25,10 @@ use App\Http\Controllers\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\TagController as AdminTagController;
+use App\Http\Controllers\Admin\ProfileImageController;
 
 // Health check endpoint
 Route::get('/health', fn() => response()->json(['status' => 'ok']));
-
 
 // Public routes
 Route::get('/settings', [SettingController::class, 'index']);
@@ -107,5 +107,9 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     Route::get('/messages',                      [MessageController::class, 'index']);
     Route::patch('/messages/{message}/read',     [MessageController::class, 'markRead']);
     Route::delete('/messages/{message}',         [MessageController::class, 'destroy']);
+
+    // Profile Image
+    Route::post('/profile-image', [ProfileImageController::class, 'store']);
+    Route::delete('/profile-image', [ProfileImageController::class, 'destroy']);
 
 });

@@ -4,11 +4,16 @@ import AdminLayout from '@/components/admin/AdminLayout.vue';
 import PageHeader from '@/components/admin/PageHeader.vue';
 import FormInput from '@/components/admin/FormInput.vue';
 import FormTextarea from '@/components/admin/FormTextarea.vue';
+import ProfileImageUploader from '@/components/admin/ProfileImageUploader.vue';
 import { useApi } from '@/composables/useApi';
 import { useUiStore } from '@/stores/uiStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 const { get, put, loading } = useApi()
 const uiStore = useUiStore()
+const settingsStore = useSettingsStore()
+
+const currentProfileImage = ref('')
 
 const form = ref({
   site_name:      '',
@@ -26,27 +31,50 @@ const form = ref({
   available_for_work: 'true',
 })
 
+// async function fetchSettings() {
+//   const { data } = await get('/admin/settings')
+//   if (data?.data) {
+//     Object.keys(form.value).forEach(key => {
+//       if (data.data[key] !== undefined) {
+//         form.value[key] = data.data[key]
+//       }
+//     })
+//   }
+// }
+
 async function fetchSettings() {
   const { data } = await get('/admin/settings')
   if (data?.data) {
     Object.keys(form.value).forEach(key => {
-      if (data.data[key] !== undefined) {
-        form.value[key] = data.data[key]
-      }
+      const val = data.data[key]
+      form.value[key] = (val === null || val === undefined || val === 'null')
+        ? ''
+        : String(val)
     })
+
+    // Load current profile image separetely
+    const imgVal = data.data['profile_image']
+    if (imgVal && imgVal !== 'null') {
+      currentProfileImage.value = imgVal.startsWith('http')
+        ? imgVal
+        : `/storage/${imgVal}`
+    }
   }
 }
 
 async function handleSave() {
   const settings = Object.entries(form.value).map(([key, value]) => ({
     key,
-    value: String(value),
+    value: (value === null || value === undefined || value === 'null')
+      ? ''
+      : String(value),
     group: getGroup(key),
   }))
 
   const { success } = await put('/admin/settings', { settings })
   if (success) {
     uiStore.success('Settings saved successfully.')
+    await settingsStore.reload()
   }
 }
 
@@ -58,6 +86,16 @@ function getGroup(key) {
   return 'general'
 }
 
+function onImageUploaded(data) {
+  currentProfileImage.value = data.url
+  settingsStore.reload()
+}
+
+function onImageRemoved() {
+  currentProfileImage.value = ''
+  settingsStore.reload()
+}
+
 onMounted(fetchSettings)
 </script>
 
@@ -66,6 +104,18 @@ onMounted(fetchSettings)
     <PageHeader title="Settings" subtitle="Manage your site-wide content and preferences" />
 
     <div class="max-w-3xl space-y-8">
+
+      <!-- Profile Image -->
+       <div class="bg-slate-800 rounded-2xl border border-slate-700 p-6">
+        <h3 class="text-white font-semibold mb-4 pb-3 border-b border-slate-700">
+          Profile Image
+        </h3>
+        <ProfileImageUploader
+          :current-image="currentProfileImage"
+          @uploaded="onImageUploaded"
+          @removed="onImageRemoved"
+        />
+       </div>
 
       <!--General-->
       <div class="bg-slate-800 rounded-2xl border border-slate-700 p-6">
@@ -86,15 +136,21 @@ onMounted(fetchSettings)
           Hero Section
         </h3>
         <div class="space-y-4">
-          <FormInput label="Hero Title" v-model="form.hero_title"
+          <FormInput
+            label="Hero Title"
+            v-model="form.hero_title"
             placeholder="Hi, I'm [Your Name]" />
-          <FormInput label="Hero Subtitle" v-model="form.hero_subtitle"
-            placeholder="I build modern web applications..." :rows="2" />
+          <FormTextarea
+            label="Hero Subtitle"
+            v-model="form.hero_subtitle"
+            placeholder="I build modern web applications..."
+            :rows="2" />
             <div class="flex items-center gap-2">
               <input type="checkbox"
                 :checked="form.available_for_work === 'true'"
                 @change="form.available_for_work = $event.target.checked ? 'true' : 'false'"
-                id="available" class="w-4 h-4 accent-indigo-600" />
+                id="available"
+                class="w-4 h-4 accent-indigo-600" />
               <label for="available" class="text-sm text-slate-300">
                 Show "Available for work" badge
               </label>

@@ -78,7 +78,7 @@ const getProfileImageUrl = () => {
         <div class="flex-1 text-center lg:text-left w-full lg:order-1 flex flex-col justify-center">
 
           <!-- Availability badge-->
-          <div v-if="settingsStore.get('available_for_work') === true"
+          <div v-if="settingsStore.get('available_for_work') === 'true'"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-8 border
                   dark:bg-green-500/10 dark:border-green-500/20 dark:text-green-400
                   bg-[#00F0A0]/10 border-[#00F0A0]/30 text-[#00F0A0]">
@@ -141,7 +141,7 @@ const getProfileImageUrl = () => {
 
             <a
               v-if="settingsStore.get('email')"
-              :href="settingsStore.get('email')"
+              :href="`mailto:${settingsStore.get('email')}`"
               class="text-sm transition-colors dark:text-slate-400 dark:hover:text-white
                     text-[#B2DFDB] hover:text-[#00F0A0]">
               Email
