@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useUiStore } from '@/stores/uiStore';
 import api from '@/api/index.js';
 import { PhotoIcon, TrashIcon, ArrowUpTrayIcon } from '@heroicons/vue/24/outline';
@@ -95,6 +95,12 @@ function onDrop(e) {
   const file = e.dataTransfer.files[0];
   if (file) uploadImage(file);
 }
+
+watch(() => props.currentImage, (newVal) => {
+  if (newVal && newVal !== preview.value) {
+    preview.value = newVal
+  }
+}, { immediate: true })
 </script>
 
 <template>

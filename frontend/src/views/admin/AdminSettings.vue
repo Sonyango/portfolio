@@ -31,16 +31,6 @@ const form = ref({
   available_for_work: 'true',
 })
 
-// async function fetchSettings() {
-//   const { data } = await get('/admin/settings')
-//   if (data?.data) {
-//     Object.keys(form.value).forEach(key => {
-//       if (data.data[key] !== undefined) {
-//         form.value[key] = data.data[key]
-//       }
-//     })
-//   }
-// }
 
 async function fetchSettings() {
   const { data } = await get('/admin/settings')
@@ -52,12 +42,12 @@ async function fetchSettings() {
         : String(val)
     })
 
-    // Load current profile image separetely
+    // Load current profile image API returning full URL
     const imgVal = data.data['profile_image']
-    if (imgVal && imgVal !== 'null') {
-      currentProfileImage.value = imgVal.startsWith('http')
-        ? imgVal
-        : `/storage/${imgVal}`
+    if (imgVal && imgVal !== '' && imgVal !== 'null') {
+      currentProfileImage.value = imgVal
+    } else {
+      currentProfileImage.value = ''
     }
   }
 }

@@ -11,11 +11,18 @@ class SettingController extends Controller
 {
     public function index()
     {
-        //$settings = Setting::all()->pluck('value', 'key');
-        //return response()->json(['data' => $settings]);
 
         $settings = Setting::all()->mapWithKeys(function ($setting) {
-            return [$setting->key => $setting->value ?? ''];
+            $value = $setting->value ?? '';
+
+            // Convert profile_image path to full URL for admin display
+            if ($setting->key === 'profile_image' && $value && $value !== 'null') {
+                $value = str_starts_with($value, 'http')
+                    ? $value
+                    : asset('storage/' . $value);
+            }
+
+            return [$setting->key => $value];
         });
         return response()->json(['data' => $settings]);
     }
