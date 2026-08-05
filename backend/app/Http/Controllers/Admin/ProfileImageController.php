@@ -24,12 +24,12 @@ class ProfileImageController extends Controller
         // Store new image
         $path = $request->file('profile_image')->store('profile', 'public');
 
-        // Save path to settngs
+        // Save only the path (not URL) to settngs
         Setting::set('profile_image', $path, 'general');
 
         return response()->json([
             'message' => 'Profile image uploaded successfully.',
-            'url' => asset('storage/' . $path),
+            'url'   => url('/api/profile-image'),  //Protected route
             'path' => $path,
         ]);
     }

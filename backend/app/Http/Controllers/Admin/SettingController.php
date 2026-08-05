@@ -16,11 +16,17 @@ class SettingController extends Controller
             $value = $setting->value ?? '';
 
             // Convert profile_image path to full URL for admin display
-            if ($setting->key === 'profile_image' && $value && $value !== 'null') {
-                $value = str_starts_with($value, 'http')
-                    ? $value
-                    : asset('storage/' . $value);
-            }
+            // if ($setting->key === 'profile_image' && $value && $value !== 'null') {
+            //     $value = str_starts_with($value, 'http')
+            //         ? $value
+            //         : asset('storage/' . $value);
+            // }
+
+            // Return protected route URL for profile image
+            if ($setting->key === 'profile_image' && $value && $value !== 'null')
+                {
+                    $value = url('/api/profile-image');
+                }
 
             return [$setting->key => $value];
         });
@@ -35,14 +41,6 @@ class SettingController extends Controller
             'settings.*.value'   => 'nullable|string',
             'settings.*.group'  => 'nullable|string',
         ]);
-
-        // foreach ($data['settings'] as $setting) {
-        //     Setting::set(
-        //         $setting['key'],
-        //         $setting['value'] ?? null,
-        //         $setting['group'] ?? 'general'
-        //     );
-        // }
 
         foreach ($data['settings'] as $setting) {
             $key    = $setting['key'];

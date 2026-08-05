@@ -2,6 +2,7 @@
 import { useSettingsStore } from '@/stores/settingsStore';
 import { ArrowDownIcon } from '@heroicons/vue/24/outline';
 import { ref, onMounted } from 'vue';
+import ProtectedImage from '@/components/public/ProtectedImage.vue';
 
 const settingsStore = useSettingsStore()
 const imageError = ref(false)
@@ -50,15 +51,12 @@ const getProfileImageUrl = () => {
               class="absolute inset-0 rounded-full bg-[#00F0A0]/10 dark:bg-slate-800 animate-pulse" />
 
             <!-- Profile image -->
-            <img
+            <ProtectedImage
               :src="getProfileImageUrl()"
-              :alt="settingsStore.get('site_name', 'Profile Image')"
-              @load="imageLoaded = true"
-              @error="imageError = true"
-              class="w-full h-full rounded-full object-cover border-4
-                     dark:border-slate-700 border-[#00F0A0]/30
-                     shadow-lg shadow-[#00F0A0]/20"
-              :class="{ 'opacity-0': !imageLoaded && !imageError }"
+              :alt="settingsStore.get('site_name', 'Profile')"
+              img-class="w-full h-full rounded-full object-cover border-4 dark:border-slate-700
+                        border-[#00F0A0]/30 shadow-lg shadow-[#00F0A0]/20"
+              wrap-class="w-full h-full"
             />
           </div>
 

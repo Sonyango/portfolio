@@ -10,16 +10,15 @@ class SettingController extends Controller
 {
     public function index()
     {
-        // $settings = Setting::all()->pluck('value', 'key');
-        // return response()->json(['data' => $settings]);
 
         $settings = Setting::all()->mapWithKeys(function ($setting) {
             $value = $setting->value ?? '';
 
-            // Convert profile_image path to full url
-            if ($setting->key === 'profile_image' && $value) {
-                $value = str_starts_with($value, 'http') ? $value : asset('storage/' . $value);
-            }
+            // Return protected route URL for profile image
+            if ($setting->key === 'profile_image' && $value && $value !== 'null')
+                {
+                    $value = url('/api/profile-image');
+                }
             return [$setting->key => $value];
         });
         return response()->json(['data' => $settings]);

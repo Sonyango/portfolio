@@ -26,9 +26,13 @@ use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\TagController as AdminTagController;
 use App\Http\Controllers\Admin\ProfileImageController;
+use App\Http\Controllers\ProfileImageServeController;
 
 // Health check endpoint
 Route::get('/health', fn() => response()->json(['status' => 'ok']));
+
+// Public profile image
+Route::get('/profile-image', [ProfileImageServeController::class, 'show'])->name('profile.image');
 
 // Public routes
 Route::get('/settings', [SettingController::class, 'index']);
