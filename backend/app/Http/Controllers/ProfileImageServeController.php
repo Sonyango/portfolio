@@ -27,8 +27,22 @@ class ProfileImageServeController extends Controller
         }
 
         $file = Storage::disk('public')->get($path);
-        $mimeType = Storage::mimeType($path);
-        //$mimeType = Storage::disk('public')->mimeType($path);
+
+        // Detect mime type with fallback for fake storage in tests
+        //$mimeType = Storage::mimeType($path);
+        $mimeType = Storage::disk('public')->mimeType($path);
+
+        if (empty($mimeType) || $mimeType === 'application/octet-stream') {
+            // Drive from extension as fallback
+            $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            $mimeType = match($extension) {
+                'jpg', 'jpeg'   => 'image/jpeg',
+                'png'           => 'image/png',
+                'webp'          => 'image/webp',
+                'gif'           => 'image/gif',
+                default         => 'image/jpeg',
+            };
+        }
 
         return response($file, 200)
             ->header('Content-Type',    $mimeType)
