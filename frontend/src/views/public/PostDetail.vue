@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PublicLayout from '@/components/public/PublicLayout.vue';
 import { usePostsStore } from '@/stores/postsStore';

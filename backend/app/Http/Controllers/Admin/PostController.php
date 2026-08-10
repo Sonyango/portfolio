@@ -39,8 +39,17 @@ class PostController extends Controller
         $data['slug']       = $data['slug'] ?? Str::slug($data['title']);
         $data['user_id']    = auth()->id();
 
+        // Auto-set published_at when status is published
         if ($data['status'] === 'published' && empty($data['published_at'])) {
             $data['published_at'] = now();
+        }
+
+        // For scheduled posts, published_at is required
+        if ($data['status'] === 'scheduled' && empty($data['published_at'])) {
+            return response()->json([
+                'message' => 'Publish date is required for scheduled posts.',
+                'error' => ['published_at' => ['Publish date is required for scheduled posts.']]
+            ], 422);
         }
 
         if ($request->hasFile('thumbnail')) {
@@ -76,6 +85,19 @@ class PostController extends Controller
             'tags.*'        => 'exists:tags,id',
             'thumbnail'     => 'nullable|image|mimes:jpg,jpeg,png,,webp|max:2048',
         ]);
+
+        // Auto-set published_at when status is published
+        if ($data['status'] === 'published' && empty($data['published_at'])) {
+            $data['published_at'] = now();
+        }
+
+        // For sheduled posts, published_at is required
+        if ($data['status'] === 'scheduled' && empty($data['published_at'])) {
+            return response()->json([
+                'message' => 'Publish datet is required for scheduled posts.',
+                'errors' => ['published_at' => ['Publish date is required for scheduled posts.']]
+            ], 422);
+        }
 
         if ($request->hasFile('thumbnail')) {
             if ($post->thumbnail) {

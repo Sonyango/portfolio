@@ -26,7 +26,12 @@ class PostResource extends JsonResource
                                 ? asset('storage/' . $this->thumbnail)
                                 : null,
             'status'        => $this->status,
-            'published_at'  => $this->published_at?->toDateString(),
+            'published_at'  => $this->published_at
+                                    ? $this->published_at->format('d M Y')
+                                    : null,
+            'published_at_raw' => $this->published_at
+                                    ? $this->published_at->toDateTimeString()
+                                    : null,
             'author'        => $this->whenLoaded('user', fn() => $this->user->name),
             'categories'    => CategoryResource::collection(
                                     $this->whenLoaded('categories')

@@ -14,6 +14,7 @@ const posts     = ref([])
 const showForm  = ref(false)
 const editItem  = ref(null)
 const deleteId  = ref(null)
+const loading   = ref(false)
 
 const statusColors  = {
   published: 'bg-green-500/10 text-green-400',
@@ -22,24 +23,40 @@ const statusColors  = {
 }
 
 async function fetchPosts() {
+  loading.value = true
   const { data }  = await get('/admin/posts')
-  if (data) posts.value = data.data
+  if (data) posts.value = data.data ?? []
+  loading.value = false
 }
 
 function openCreate() { editItem.value = null; showForm.value = true }
-function openEdit(post) { editItem.value = post; showForm.value = true }
-function confirmDelete(id) { deleteId = id }
+function openEdit(post) { editItem.value = { ...post }; showForm.value = true }
+function confirmDelete(id) { deleteId.value = id }
 
 async function handleDelete() {
+  if (!deleteId.value) return
   const { success } = await del(`/admin/posts/${deleteId.value}`)
   if (success) {
-    uiStore.success('Post deleted.')
+    uiStore.success('Post deleted successfully.')
     deleteId.value = null
     await fetchPosts()
   }
 }
 
-function onSaved() { showForm.value = false; fetchPosts() }
+function onSaved() {
+  showForm.value = false;
+  editItem.value = null
+  fetchPosts()
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
 
 onMounted(fetchPosts)
 </script>
@@ -57,12 +74,22 @@ onMounted(fetchPosts)
       </template>
     </PageHeader>
 
+    <!-- Posts table -->
     <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
-      <div v-if="posts.length === 0" class="p-12 text-center text-slate-400">
+
+      <!-- Loading -->
+       <div v-if="loading" class="p-8 text-center text-slate-400">
+        Loading posts...
+       </div>
+
+       <!-- Empty -->
+      <div v-else-if="posts.length === 0"
+        class="p-12 text-center text-slate-400">
         <p class="text-lg font-medium">No posts yet.</p>
         <p class="text-sm mt-1">Click "New Post" to write your first blog post.</p>
       </div>
 
+      <!-- Table -->
       <table v-else class="w-full">
         <thead>
           <tr class="border-b border-slate-700">
@@ -89,7 +116,7 @@ onMounted(fetchPosts)
               </span>
             </td>
             <td class="px-6 py-4 text-slate-400 text-sm">
-              {{ post.published_at || '-' }}
+              {{ formatDate(post.published_at)}}
             </td>
             <td class="px-6 py-4">
               <div class="flex items-center gap-2 justify-end">

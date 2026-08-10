@@ -12,11 +12,23 @@ export function useApi() {
     errors.value  = {}
     try {
       const config = { method, url, ...options }
+
       if (data) {
         config.data = data
+
+        // If formdata, let browser set Content-Type with boundary automatically
+        // Do not set Content-Type manually for multipart uploads
+        if (data instanceof FormData) {
+          config.headers = {
+            ...config.headers,
+            'Content-Type': 'multipart/form-data',
+          }
+        }
       }
+
       const response = await api(config)
       return { data: response.data, success: true }
+
     } catch (err) {
       const status  = err.response?.status
       const message = err.response?.data?.message || 'Something went wrong.'
@@ -27,6 +39,7 @@ export function useApi() {
 
       uiStore.error(message)
       return { data: null, success: false }
+      
     } finally {
       loading.value = false
     }
