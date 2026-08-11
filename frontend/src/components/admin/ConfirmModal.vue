@@ -32,7 +32,10 @@ const emit = defineEmits(['confirm', 'cancel'])
                     hover:bg-slate-700 text-sm font-medium transition-colors">
             Cancel
           </button>
-          <button class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700
+
+          <button
+            @click="emit('confirm')"
+            class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700
                        text-white text-sm font-medium transition-colors">
             Delete
           </button>

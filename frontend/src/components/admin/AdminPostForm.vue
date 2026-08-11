@@ -36,6 +36,9 @@ const statusOptions = [
   { value:  'scheduled',  label:  'Scheduled' },
 ]
 
+const originalForm = ref(null)
+const originalPreview = ref(null)
+
 // Form validation
 // Publish button is disabled until all required fields are filled
 const isFormValid = computed(() => {
@@ -50,6 +53,18 @@ const isFormValid = computed(() => {
   return titleOk && slugOk && contentOk
 })
 
+// Form changes tracker
+const isFormDirty = computed(() => {
+  if (!isEdit.value) return true
+  if (!originalForm.value) return false
+
+  const current = JSON.stringify(form.value)
+  const original = JSON.stringify(originalForm.value)
+  const previewChanged = thumbnailPreview.value !== originalPreview.value
+
+  return current !== original || previewChanged
+})
+
 // Populate form when editing
 watch(()  => props.post, (p) => {
   if (p) {
@@ -62,6 +77,9 @@ watch(()  => props.post, (p) => {
       published_at: p.published_at  || '',
     }
     thumbnailPreview.value  = p.thumbnail  || null
+
+    originalForm.value = JSON.parse(JSON.stringify(form.value))
+    originalPreview.value = thumbnailPreview.value
   } else {
     // Reset for new post
     form.value = {
@@ -74,6 +92,9 @@ watch(()  => props.post, (p) => {
     }
     thumbnailPreview.value = null
     thumbnailFile.value   = null
+
+    originalForm.value = null
+    originalPreview.value = null
   }
 }, { immediate: true })
 
@@ -157,7 +178,7 @@ async function handleSubmit() {
 
 <template>
   <!-- Overlay -->
-  <div class="fixed inset-0 bg-black/60 z-40" @click="emit('close')" />
+  <div class="fixed inset-0 bg-black/60 z-40" />
 
   <!-- Drawer -->
   <div class="fixed right-0 top-0 h-full w-full max-w-3xl bg-slate-800
@@ -255,16 +276,6 @@ async function handleSubmit() {
 
           <!-- Upload zone-->
 
-          <!-- <label class="flex items-center justify-center gap-2 w-full h-24
-                      border-2 border-dashed border-slate-600 rounded-xl
-                      text-slate-400 hover:border-indigo-500 hover:text-indigo-400
-                      cursor-pointer transition-colors">
-              <PhotoIcon class="w-5 h-5" />
-              <span class="text-sm">Click to upload thumbnail</span>
-              <input type="tile" accept="image/*" class="hidden"
-                @change="onThumbnaiChange" />
-          </label> -->
-
           <div
             v-if="!thumbnailPreview"
             @click="triggerFileInput"
@@ -324,10 +335,10 @@ async function handleSubmit() {
         <!-- Disabled until form is valid -->
         <button
         @click="handleSubmit"
-        :disabled="loading || !isFormValid"
-        :title="!isFormValid ? 'Fill in all required fields first' : ''"
+        :disabled="loading || !isFormValid || (isEdit && !isFormDirty)"
+        :title="!isFormValid || (isEdit && !isFormDirty) ? 'Make at least one change before updating' : ''"
         :class="['px-6 py-2.5 rounded-xl text-sm font-medium transition-colors',
-          isFormValid && !loading
+          isFormValid && (!isEdit || isFormDirty) && !loading
             ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer'
             : 'bg-slate-600 text-slate-400 cursor-not-allowed opacity-60']"
       >

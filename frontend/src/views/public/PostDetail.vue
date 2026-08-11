@@ -100,7 +100,7 @@ onMounted(async () => {
                    dark:prose-headings:text-white
                    dark:prose-p:text-slate-300
                    dark:prose-a:text-indigo-400
-                   dark:prose-code:text-indigo-300">
+                   dark:prose-code:text-indigo-300"
                   v-html="safeContent"
                  </div>
 
