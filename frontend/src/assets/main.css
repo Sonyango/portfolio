@@ -23,3 +23,60 @@
   --lm-white:         #FFFFFF;
   --lm-badge-bg:      #00F0A020;
 }
+
+/* ---- Custom DateTime Picker Styles ------- * /
+
+/* Datetime-local input style */
+input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+/* Admin dark theme date picker*/
+.admin-date-picker {
+  color-scheme: dark;
+}
+
+.admin-date-picker::-webkit-calendar-picker-indicator {
+  filter:   invert(0.8) sepia(1) saturate(3) hue-rotate(200deg);
+  cursor:   pointer;
+  padding:  4px;
+  border-radius: 4px;
+  opacity: 0.8;
+}
+
+.admin-date-picker::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background: rgba(99, 102, 241, 0.2);
+}
+
+/* Remove manual text input capability*/
+.admin-date-picker::-webkit-datetime-edit {
+  color: #a5b4fc;
+}
+
+.admin-date-picker::-webkit-datetime-edit-text {
+  color: #6366f1;
+  padding: 0 2px;
+}
+
+.admin-date-picker::-webkit-datetime-edit-month-field,
+.admin-date-picker::-webkit-datetime-edit-day-field,
+.admin-date-picker::-webkit-datetime-edit-year-field,
+.admin-date-picker::-webkit-datetime-edit-hour-field,
+.admin-date-picker::-webkit-datetime-edit-minute-field,
+.admin-date-picker::-webkit-datetime-edit-ampm-field {
+  color: #a5b4cf;
+  border-radius: 3px;
+  padding: 1px 3px;
+}
+
+.admin-date-picker::-webkit-datetime-edit-month-field:focus,
+.admin-date-picker::-webkit-datetime-edit-day-field:focus,
+.admin-date-picker::-webkit-datetime-edit-year-field:focus,
+.admin-date-picker::-webkit-datetime-edit-hour-field:focus,
+.admin-date-picker::-webkit-datetime-edit-minute-field:focus,
+.admin-date-picker::-webkit-datetime-edit-ampm-field:focus {
+  background: #4f46e5;
+  color: #ffffff;
+  outline: none;
+}
