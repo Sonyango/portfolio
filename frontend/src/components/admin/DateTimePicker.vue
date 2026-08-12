@@ -4,16 +4,16 @@ import { CalendarDaysIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
-  label:      { type: String, default: 'Publish Date & Time' },
-  required:   { type: Boolean, default: false },
-  error:      { type: String, default: '' },
-  minDate:    { type: String, default: ''},
+  label: { type: String, default: 'Publish Date & Time' },
+  required: { type: Boolean, default: false },
+  error: { type: String, default: '' },
+  minDate: { type: String, default: '' },
 })
 
-const emit = defineEmits(['update:modelvalue'])
+const emit = defineEmits(['update:modelValue'])
 
-const inputRef      = ref(null)
-const displayValue  = ref(null)
+const inputRef = ref(null)
+const displayValue = ref(null)
 
 // Format datetime-local value to readable display
 function formatDisplay(val) {
@@ -21,10 +21,10 @@ function formatDisplay(val) {
   try {
     const date = new Date(val)
     return date.toLocaleDateString('en-GB', {
-      day:    '2-digit',
-      month:  'short',
-      year:   'numeric',
-      hour:   '2-digit',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
       minute: '2-digit',
       hour12: true,
     })
@@ -55,15 +55,16 @@ function openPicker() {
 // Handle picker selection
 function onPickerChange(e) {
   const val = e.target.value
+  console.log('DateTimePicker value selected:', val)
   if (!val) return
   displayValue.value = formatDisplay(val)
-  emit('update:modelvalue', val)
+  emit('update:modelValue', val)
 }
 
 // Clear selection
 function clearDate() {
   displayValue.value = ''
-  emit('update:modelvalue', '')
+  emit('update:modelValue', '')
   if (inputRef.value) inputRef.value.value = ''
 }
 </script>
@@ -76,50 +77,37 @@ function clearDate() {
     </label>
 
     <!-- Custom display button -->
-     <div class="relative">
-      <button
-        type="button"
-        @click="openPicker"
-        :class="['w-full flex items-center justify-between px-4 py-2.5',
-                  'bg-slate-900 border rounded-xl text-sm transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-indigo-500',
-                  error
-                    ? 'border-red-500'
-                    : 'border-slate-600 hover:border-indigo-500']">
+    <div class="relative">
+      <button type="button" @click="openPicker" :class="['w-full flex items-center justify-between px-4 py-2.5',
+        'bg-slate-900 border rounded-xl text-sm transition-colors',
+        'focus:outline-none focus:ring-2 focus:ring-indigo-500',
+        error
+          ? 'border-red-500'
+          : 'border-slate-600 hover:border-indigo-500']">
         <span :class="displayValue ? 'text-indigo-300' : 'text-slate-500'">
           {{ displayValue || 'Pick date and time...' }}
         </span>
         <div class="flex items-center gap-2">
           <!-- Clear button -->
-           <button
-              v-if="displayValue"
-              type="button"
-              @click.stop="clearDate"
-              class="text-slate-400 hover:text-red-400 transition-colors text-lg leading-none"
-              title="Clear date">
-              x
-            </button>
-            <CalendarDaysIcon class="w-5 h-5 text-indigo-400" />
+          <button v-if="displayValue" type="button" @click.stop="clearDate"
+            class="text-slate-400 hover:text-red-400 transition-colors text-lg leading-none" title="Clear date">
+            x
+          </button>
+          <CalendarDaysIcon class="w-5 h-5 text-indigo-400" />
         </div>
       </button>
 
       <!-- Hidden native input, only used to get the picker -->
-       <input
-          ref="inputRef"
-          type="datetime-local"
-          :value="modelValue"
-          :min="minDateTime"
-          class="admin-date-picker absolute opacity-0 pointer-events-none inset-0 w-full h-full"
-          tabindex="-1"
-          @change="onPickerChange" />
-     </div>
+      <input ref="inputRef" type="datetime-local" :value="modelValue" :min="minDateTime"
+        class="admin-date-picker absolute opacity-0 pointer-events-none inset-0 w-full h-full" tabindex="-1"
+        @change="onPickerChange" />
+    </div>
 
-     <!-- Selected date confirmation -->
-      <p v-if="displayValue && !error"
-        class="mt-1 text-xs text-indigo-400 flex items-center gap-1">
-        <span>✓</span> Scheduled for {{ displayValue }}
-      </p>
+    <!-- Selected date confirmation -->
+    <p v-if="displayValue && !error" class="mt-1 text-xs text-indigo-400 flex items-center gap-1">
+      <span>✓</span> Scheduled for {{ displayValue }}
+    </p>
 
-      <p v-if="error" class="mt-1 text-xs text-red-400">{{ error }}</p>
+    <p v-if="error" class="mt-1 text-xs text-red-400">{{ error }}</p>
   </div>
 </template>
