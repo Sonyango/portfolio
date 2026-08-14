@@ -55,7 +55,6 @@ function openPicker() {
 // Handle picker selection
 function onPickerChange(e) {
   const val = e.target.value
-  console.log('DateTimePicker value selected:', val)
   if (!val) return
   displayValue.value = formatDisplay(val)
   emit('update:modelValue', val)

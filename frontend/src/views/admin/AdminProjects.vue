@@ -8,16 +8,19 @@ import { useApi } from '@/composables/useApi';
 import { useUiStore } from '@/stores/uiStore';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/vue/24/outline';
 
-const { get, del, loading } = useApi()
+const { get, del } = useApi()
 const uiStore   = useUiStore()
 const projects  = ref([])
 const showForm  = ref(false)
 const editItem  = ref(null)
 const deleteId  = ref(null)
+const loading   = ref(false)
 
 async function fetchProjects() {
+  loading.value = true
   const { data } =  await get('/admin/projects')
-  if (data) projects.value = data.data
+  if (data) projects.value = data.data ?? []
+  loading.value = false
 }
 
 function openCreate() {
@@ -26,7 +29,7 @@ function openCreate() {
 }
 
 function openEdit(project) {
-  editItem.value  = project
+  editItem.value  = { ...project }
   showForm.value  = true
 }
 
@@ -35,6 +38,7 @@ function confirmDelete(id) {
 }
 
 async function handleDelete() {
+  if (!deleteId.value) return
   const { success } = await del(`/admin/projects/${deleteId.value}`)
   if (success) {
     uiStore.success('Project deleted.')
@@ -45,7 +49,13 @@ async function handleDelete() {
 
 function onSaved() {
   showForm.value = false
+  editItem.value = null
   fetchProjects()
+}
+
+function onClose() {
+  showForm.value = false
+  editItem.value = null
 }
 
 onMounted(fetchProjects)
@@ -76,7 +86,7 @@ onMounted(fetchProjects)
         <p class="text-sm mt-1">Click "Add Project" to create your first project.</p>
       </div>
 
-      <table class="w-full">
+      <table v-else class="w-full">
         <thead>
           <tr class="border-b border-slate-700">
             <th class="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Project</th>
@@ -95,12 +105,12 @@ onMounted(fetchProjects)
                   v-if="project.thumbnail"
                   :src="project.thumbnail"
                   :alt="project.title"
-                  class="w-10 h-10 rounded-lg object-cover" />
-                <div v-else class="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center text-slate-400 text-xs">
+                  class="w-10 h-10 rounded-lg object-cover shrink-0" />
+                <div v-else class="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center text-slate-400 text-xs shrink-0">
                   IMG
                 </div>
-                <div>
-                  <p class="text-white font-medium text-sm">{{ project.title }}</p>
+                <div class="min-w-0">
+                  <p class="text-white font-medium text-sm truncate">{{ project.title }}</p>
                   <p class="text-slate-400 text-xs">{{ project.slug }}</p>
                 </div>
               </div>
@@ -126,13 +136,15 @@ onMounted(fetchProjects)
             <td class="px-6 py-4">
               <div class="flex items-center gap-2 justify-end">
                 <button
-                  @click="openCreate(project)"
-                  class="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">
+                  @click="openEdit(project)"
+                  class="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                  title="Edit">
                   <PencilIcon class="w-4 h-4" />
                 </button>
                 <button
                   @click="confirmDelete(project.id)"
-                  class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
+                  class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                  title="Delete">
                   <TrashIcon class="w-4 h-4" />
                 </button>
               </div>
@@ -147,7 +159,7 @@ onMounted(fetchProjects)
         v-if="showForm"
         :project="editItem"
         @saved="onSaved"
-        @close="showForm = false"
+        @close="onClose"
      />
 
      <!--Delete confirm-->
