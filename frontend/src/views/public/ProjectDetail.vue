@@ -20,6 +20,13 @@ watch(() => projectsStore.current, (project) => {
     document.title = `${project.title} | Stephen Portfolio`
   }
 })
+
+onMounted(async () => {
+  await projectsStore.fetchProject(route.params.slug)
+  if (!projectsStore.current) {
+    router.push({ name: 'projects' })
+  }
+})
 </script>
 
 <template>
@@ -36,12 +43,37 @@ watch(() => projectsStore.current, (project) => {
             <ArrowLeftIcon class="w-4 h-4" /> Back to Projects
           </router-link>
 
-          <div v-if="projectsStore.loading" class="text-center dark:text-slate-400 text-[#B2DFDB] py-20">
+          <!-- Loading -->
+          <div v-if="projectsStore.loading"
+            class="text-center dark:text-slate-400 text-[#B2DFDB] py-20">
+            <div class="w-8 h-8 border-2 border-indigo-400 border-t-transparent
+                        rounded-full animate-spin mx-auto mb-4" />
             Loading...
           </div>
 
+          <!-- Project not found -->
+           <div
+            v-else-if="!projectsStore.current && !projectsStore.loading"
+            class="text-center py-20">
+            <p class="text-2xl font-bold mb-2 dark:text-white text-[#00F0A0]">
+              Project not found
+            </p>
+            <p class="mb-6 dark:text-slate-400 text-[#B2DFDB]">
+              This project doesn't exist or has been romoved.
+            </p>
+            <router-link
+              to="/projects"
+              class="px-6 py-3 rounded-xl font-medium text-sm transition-colors
+                      dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:text-white
+                      bg-[#00F0A0] hover:bg-white text-[#0B2B26]">
+              View All Projects
+            </router-link>
+          </div>
+
+          <!-- Project Detail -->
           <template v-else-if="projectsStore.current">
-            <!-- Header -->
+
+            <!-- Category badge -->
              <div class="mb-8">
               <span class="text-sm font-semibold uppercase tracking-wider
                        dark:text-indigo-400 text-[#00F0A0]">
@@ -148,6 +180,17 @@ watch(() => projectsStore.current, (project) => {
                     </div>
                   </div>
                  </div>
+
+                 <!-- Back button at bottom -->
+                  <div class="mt-12 pt-8 border-t dark:border-slate-800 border-[#1A4A42]">
+                    <router-link
+                      to="/projects"
+                      class="inline-flex items-center gap-2 text-sm transition-colors dark:text-slate-400
+                            dark:hover:text-white text-[#B2DFDB] hover:text-[#00F0A0]">
+                      <ArrowLeftIcon class="w-4 h-4" />
+                      Back to All Projects
+                    </router-link>
+                  </div>
           </template>
 
       </div>
