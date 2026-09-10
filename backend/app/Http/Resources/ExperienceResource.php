@@ -23,7 +23,11 @@ class ExperienceResource extends JsonResource
             'end_date'      => $this->current
                                 ? 'Present'
                                 : $this->end_date?->format('M Y'),
-            'current'       => $this->current,
+            // Raw dates for admin form population
+            'start_date_raw' => $this->start_date?->format('Y-m-d'),
+            'end_date_raw'   => $this->end_date?->format('Y-m-d'),
+            // Cast to real boolean
+            'current'       => (bool) $this->current,
             'location'      => $this->location,
             'order'         => $this->order,
         ];

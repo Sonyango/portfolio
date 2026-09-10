@@ -70,7 +70,9 @@ onMounted(async () => {
                 <p v-if="exp.description" class="text-sm leading-relaxed dark:text-slate-400 text-[#B2DFDB]">
                   {{ exp.description }}
                 </p>
-                <span class="inline-block mt-3 px-2.5 py-1 text-xs rounded-full font-medium dark:bg-green-500/10 dark:text-green-400
+                <span
+                  v-if="exp.current === true"
+                  class="inline-block mt-3 px-2.5 py-1 text-xs rounded-full font-medium dark:bg-green-500/10 dark:text-green-400
                              bg-[#00F0A0]/15 text-[#00F0A0] border dark:border-green-500/20 border-[#00F0A0]/30">
                   Current Role
                 </span>
