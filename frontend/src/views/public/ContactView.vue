@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import PublicLayout from '@/components/public/PublicLayout.vue';
 import { useUiStore } from '@/stores/uiStore';
 import api from '@/api/index.js';
@@ -9,6 +9,7 @@ import {
   PhoneIcon,
   MapPinIcon,
   PaperAirplaneIcon,
+  ShieldCheckIcon,
  } from '@heroicons/vue/24/outline';
  import { useSeo } from '@/composables/useSeo';
 
@@ -31,27 +32,181 @@ const form = ref({
 const submitting  = ref(false)
 const submitted   = ref(false)
 const errors      = ref({})
+const lastSubmitTime = ref(0)
+const submitCount = ref(0)
 
+// Validation rules
+const validations = computed(() => ({
+  name: {
+    valid: form.value.name.trim().length >= 2 &&
+            form.value.name.trim().length <= 50,
+    message: form.value.name.trim().length === 0
+      ? 'Name is required.'
+      : form.value.name.trim().length < 2
+        ? 'Name must be at least 2 characters.'
+        : '',
+  },
+  email: {
+    valid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email.trim()),
+    message: form.value.email.trim().length === 0
+      ? 'Email is required.'
+      : 'Please enter a valid email address.',
+  },
+  subject: {
+    valid: form.value.subject.trim().length >= 3 &&
+            form.value.subject.trim().length <= 200,
+    message: form.value.subject.trim().length === 0
+      ? 'Subject is required.'
+      : form.value.subject.trim().length < 3
+        ? 'Subject must be at least 3 characters.'
+        : '',
+  },
+  message: {
+    valid: form.value.message.trim().length >= 10 &&
+            form.value.message.trim().length <= 2000,
+    message: form.value.message.trim().length === 0
+      ? 'Message is required.'
+      : form.value.message.trim().length < 10
+        ? 'Message must be at least 10 characters.'
+        : form.value.message.trim().length > 2000
+          ? 'Message cannot exceed 2000 characters.'
+          : '',
+  }
+}))
+
+// Track which fields have been touched
+const touched = ref({
+  name: false,
+  email: false,
+  subject: false,
+  message: false,
+})
+
+function touch(field) {
+  touched.value[field] = true
+}
+
+// Show error only after field is touched
+function fieldError(field) {
+  if (!touched.value[field]) return ''
+  return validations.value[field].valid
+    ? ''
+    : validations.value[field].message
+}
+
+// Form is valid if all fields pass validation
+const isFormValid = computed(() => {
+  return Object.values(validations.value).every(v => v.valid)
+})
+
+// Client-side rate limiting
+const canSubmit = computed(() => {
+  return isFormValid.value &&
+         !submitting.value &&
+         submitCount.value < 5
+})
+
+// Honeypot field for spam prevention
+const honeypot = ref('')
+
+// Detect suspecious content
+function containsSuspeciousContent(text) {
+  const patterns = [
+    /<script/i,
+    /javascript:/i,
+    /on\w+\s*=/i,
+    /\beval\s*\(/i,
+    /\bdocument\./i,
+    /\bwindow\./i,
+    /https?:\/\/.{3,}/i,
+  ]
+  return patterns.some(p => p.test(text))
+}
+
+// Submit handler
 async function handleSubmit() {
+  if (!canSubmit.value) return
+
+  // Touch all fields to show any remaining errors
+  Object.keys(touched.value).forEach(f => touched.value[f] = true)
+
+  if (!isFormValid.value) return
+
+  // Honeypot check
+  if (honeypot.value) {
+    // Silently pretend success without alerting the bot it failed
+    submitted.value = true
+    return
+  }
+
+  // Client-side rate limit
+  const now = Date.now()
+  const elapsed = now - lastSubmitTime.value
+  if (elapsed < 3000) {
+    uiStore.error('Please wait a moment before sending anothet message.')
+    return
+  }
+
+  // Check for suspecious content
+  const fieldsToCheck = [
+    form.value.name,
+    form.value.subject,
+    form.value.message,
+  ]
+  if (fieldsToCheck.some(containsSuspeciousContent)) {
+    errors.value = { message: ['Your message contains invalid content.'] }
+    uiStore.error('Your message contains invalid content. please remove them and try again.')
+    return
+  }
+
   submitting.value  = true
+  lastSubmitTime.value = now
   errors.value      = {}
 
   try {
-    await api.post('/contact', form.value)
+    await api.post('/contact', {
+      name: form.value.name.trim(),
+      email: form.value.email.trim().toLowerCase(),
+      subject: form.value.subject.trim(),
+      message: form.value.message.trim(),
+    })
+
+    submitCount.value++
     submitted.value = true
     uiStore.success('Message sent! I will get back to you soon.')
     form.value = { name: '', email: '', subject: '', message: ''}
+    touched.value = { name: false, email: false, subject: false, message: false }
+
   } catch (err) {
-      if (err.response?.status === 422) {
-        errors.value = err.response.data.errors ?? {}
-      } else if (err.response?.status === 429) {
-        uiStore.error('Too many requests. please wait a moment and try again.')
-      } else {
-        uiStore.error('Failed to send message. Please try again.')
-      }
+    if (err.response?.status === 422) {
+      errors.value = err.response.data.errors ?? {}
+      uiStore.error('Please fix the errors below and try again.')
+    }
+    else if (err.response?.status === 429) {
+      uiStore.error('Too many messages sent. please wait before sending another message.')
+    } else {
+      uiStore.error('Failed to send message. Please try again.')
+    }
   } finally {
     submitting.value = false
   }
+
+  // try {
+  //   await api.post('/contact', form.value)
+  //   submitted.value = true
+  //   uiStore.success('Message sent! I will get back to you soon.')
+  //   form.value = { name: '', email: '', subject: '', message: ''}
+  // } catch (err) {
+  //     if (err.response?.status === 422) {
+  //       errors.value = err.response.data.errors ?? {}
+  //     } else if (err.response?.status === 429) {
+  //       uiStore.error('Too many requests. please wait a moment and try again.')
+  //     } else {
+  //       uiStore.error('Failed to send message. Please try again.')
+  //     }
+  // } finally {
+  //   submitting.value = false
+  // }
 }
 </script>
 
@@ -158,10 +313,33 @@ async function handleSubmit() {
               </a>
             </div>
            </div>
+
+           <!-- Security badge -->
+            <div class="flex items-center gap-2 px-4 py-3 rounded-xl border
+                        dark:bg-slate-900/50 dark:border-slate-800 bg-[#0D3530]/50 border-[#1A4A42]">
+                <ShieldCheckIcon class="w-4 h-4 shrink-0 dark:text-green-400 text-[#00F0A0]" />
+                <p class="text-xs dark:text-slate-400 text-[#7BB8B2]">
+                  Your information is safe and secure. I respect your privacy and will never share your details with third parties.
+                </p>
+            </div>
            </div>
 
            <!--Contact form-->
            <div class="lg:col-span-2">
+
+            <!-- Rate limiting warnning -->
+             <div v-if="submitCount >= 5"
+                class="rounded-2xl p-6 text-center border mb-4 dark:bg-amber-500/10 dark:border-amber-500/20
+                      bg-[#00F0A0]/5 border-[#00F0A0]/20">
+                <p class="font-semibold mb-1 dark:text-amber-400 text-[#00F0A0]">
+                  Message limit reached!!
+                </p>
+                <p class="text-sm dark:text-slate-400 text-[#B2DFDB]">
+                  You've sent the maximum number of messages for this session.
+                  Please try again later or contact me directly by email or phone.
+                </p>
+              </div>
+
             <!-- Success state -->
              <div v-if="submitted"
                 class="rounded-2xl p-10 text-center border
@@ -197,6 +375,18 @@ async function handleSubmit() {
                      dark:bg-slate-900 dark:border-slate-800
                      bg-[#0D3530] border-[#1A4A42]">
 
+              <!-- Honeypot, hidden from real users filled by bots -->
+               <div class="absolute opacity-0 pointer-events-none h-0 overflow-hidden"
+                    arial-hidden="true">
+                  <input
+                    v-model="honeypot"
+                    type="text"
+                    name="website"
+                    tabindex="-1"
+                    autocomplete="off"
+                  />
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
 
                   <!-- Name -->
@@ -209,19 +399,27 @@ async function handleSubmit() {
                       v-model="form.name"
                       type="text"
                       placeholder="Your full name"
+                      maxlength="50"
+                      autocomplete="name"
+                      @blur="touch('name')"
                       :class="['w-full border rounded-xl px-4 py-3 text-sm',
                              'focus:outline-none focus:ring-2 transition-colors',
                              'dark:bg-slate-800 dark:text-white',
                              'dark:placeholder-slate-500',
-                             'dark:focus:ring-indigo-500',
                              'bg-[#0B2B26] text-[#B2DFDB]',
                              'placeholder-[#7BB8B2]',
-                             'focus:ring-[#00F0A0]/50',
-                             errors.name
-                               ? 'border-red-500'
-                               : 'dark:border-slate-700 border-[#1A4A42]']" />
-                      <p v-if="errors.name" class="mt-1 text-xs text-red-400">
-                        {{ errors.name[0] }}
+                             fieldError('name')
+                                ? 'border-red-500 focus:ring-red-500/50'
+                                : touched.name && validations.name.valid
+                                  ? 'dark:border-green-600 border-[#00F0A0]/50 focus:ring-indigo-500'
+                                  : 'dark:border-slate-700 border-[#1A4A42] focus:ring-[#00F0A0]/50']"
+                      />
+                      <p v-if="fieldError('name')" class="mt-1 text-xs text-red-400">
+                        {{ fieldError('name') }}
+                      </p>
+                      <p v-else-if="touched.name && validations.name.valid"
+                        class="mt-1 text-xs dark:text-green-400 text-[#00F0A0]">
+                        Valid name
                       </p>
                    </div>
                    <!-- Email -->
@@ -234,19 +432,27 @@ async function handleSubmit() {
                       v-model="form.email"
                       type="email"
                       placeholder="your@email.com"
+                      maxlength="100"
+                      autocomplete="email"
+                      @blur="touch('email')"
                       :class="['w-full border rounded-xl px-4 py-3 text-sm',
                              'focus:outline-none focus:ring-2 transition-colors',
                              'dark:bg-slate-800 dark:text-white',
                              'dark:placeholder-slate-500',
-                             'dark:focus:ring-indigo-500',
                              'bg-[#0B2B26] text-[#B2DFDB]',
                              'placeholder-[#7BB8B2]',
-                             'focus:ring-[#00F0A0]/50',
-                             errors.email
-                               ? 'border-red-500'
-                               : 'dark:border-slate-700 border-[#1A4A42]']" />
-                      <p v-if="errors.email" class="mt-1 text-xs text-red-400">
-                        {{ errors.email[0] }}
+                             fieldError('email')
+                                ? 'border-red-500 focus:ring-red-500/50'
+                                : touched.email && validations.email.valid
+                                  ? 'dark:border-green-600 border-[#00F0A0]/50 focus:ring-indigo-500'
+                                  : 'dark:border-slate-700 border-[#1A4A42] focus:ring-[#00F0A0]/50']"
+                      />
+                      <p v-if="fieldError('email')" class="mt-1 text-xs text-red-400">
+                        {{ fieldError('email') }}
+                      </p>
+                      <p v-else-if="touched.email && validations.email.valid"
+                          class="mt-1 text-xs dark:text-green-400 text-[#00F0A0]">
+                        Valid email
                       </p>
                     </div>
                 </div>
@@ -261,21 +467,27 @@ async function handleSubmit() {
                       v-model="form.subject"
                       type="text"
                       placeholder="What's this about?"
+                      maxlength="200"
+                      @blur="touch('subject')"
                       :class="['w-full border rounded-xl px-4 py-3 text-sm',
                            'focus:outline-none focus:ring-2 transition-colors',
                            'dark:bg-slate-800 dark:text-white',
                            'dark:placeholder-slate-500',
-                           'dark:focus:ring-indigo-500',
                            'bg-[#0B2B26] text-[#B2DFDB]',
                            'placeholder-[#7BB8B2]',
-                           'focus:ring-[#00F0A0]/50',
-                           errors.subject
-                             ? 'border-red-500'
-                             : 'dark:border-slate-700 border-[#1A4A42]']"
+                           fieldError('subject')
+                              ? 'border-red-500 focus:ring-red-500/50'
+                              : touched.subject && validations.subject.valid
+                                ? 'dark:border-green-600 border-[#00F0A0]/50 focus:ring-indigo-500'
+                                : 'dark:border-slate-700 border-[#1A4A42] focus:ring-[#00F0A0]/50']"
                     />
-                    <p v-if="errors.subject" class="mt-1 text-xs text-red-400">
-                      {{ errors.subject[0] }}
+                    <p v-if="fieldError('subject')" class="mt-1 text-xs text-red-400">
+                      {{ fieldError('subject') }}
                     </p>
+                    <p v-else-if="touched.subject && validations.subject.valid"
+                          class="mt-1 text-xs dark:text-green-400 text-[#00F0A0]">
+                        Valid subject
+                      </p>
                  </div>
                  <!-- Message -->
                   <div class="mb-6">
@@ -283,45 +495,90 @@ async function handleSubmit() {
                               dark:text-slate-300 text-[#B2DFDB]">
                       Message <span class="text-red-400">*</span>
                     </label>
-                        <textarea
+                      <textarea
                       v-model="form.message"
                       :rows="6"
                       placeholder="Tell me about your project or question..."
+                      maxlength="2000"
+                      @blur="touch('message')"
                       :class="['w-full border rounded-xl px-4 py-3 text-sm',
                            'resize-none focus:outline-none focus:ring-2',
                            'transition-colors',
                            'dark:bg-slate-800 dark:text-white',
                            'dark:placeholder-slate-500',
-                           'dark:focus:ring-indigo-500',
                            'bg-[#0B2B26] text-[#B2DFDB]',
                            'placeholder-[#7BB8B2]',
-                           'focus:ring-[#00F0A0]/50',
-                           errors.message
-                             ? 'border-red-500'
-                             : 'dark:border-slate-700 border-[#1A4A42]']"
+                           fieldError('message')
+                              ? 'border-red-500 focus:ring-red-500/50'
+                              : touched.message && validations.message.valid
+                                ? 'dark:border-green-600 border-[#00F0A0]/50 focus:ring-indigo-500'
+                                : 'dark:border-slate-700 border-[#1A4A42] focus:ring-[#00F0A0]/50']"
                     />
                     <div class="flex items-center justify-between mt-1">
-                      <p v-if="errors.message" class="text-xs text-red-400">
-                        {{ errors.message[0] }}
+                      <p v-if="fieldError('message')" class="text-xs text-red-400">
+                        {{ fieldError('message') }}
                       </p>
-                      <p class="text-xs ml-auto
-                            dark:text-slate-500 text-[#7BB8B2]">
+                      <p v-else-if="touched.message && validations.message.valid"
+                          class="text-xs dark:text-green-400 text-[#00F0A0]">
+                          Valid message
+                      </p>
+                      <p v-else class="text-xs invisible">placeholder</p>
+                      <!-- Character counter -->
+                      <p class="text-xs ml-auto"
+                          :class="form.message.length > 1800
+                            ? 'text-red-400'
+                            : 'dark:text-slate-500 text-[#7BB8B2]'"
+                      >
                         {{ form.message.length }} / 2000
                       </p>
                     </div>
                   </div>
+
+                  <!-- Form progress indicator -->
+                   <div class="mb-5">
+                    <div class="flex items-center justify-between mb-1">
+                      <p class="text-xs dark:text-slate-500 text-[#7BB8B2]">
+                        Form Progress
+                      </p>
+                      <p class="text-xs font-medium dark:text-slate-400 text-[#B2DFDB]">
+                        {{ Object.values(validations).filter(v => v.valid).length }}
+                        / {{ Object.keys(validations).length }} fields complete
+                      </p>
+                    </div>
+                    <div class="w-full rounded-full h-1.5 dark:bg-slate-800 bg-[#1A4A42]">
+
+                      <div class="h-1.5 rounded-full transition-all duration-500 dark:bg-indigo-500 bg-[#00F0A0]"
+                            :style="{
+                              width: (Object.values(validations).filter(v => v.valid).length /
+                            Object.keys(validations).length * 100) + '%'
+                            }" />
+                    </div>
+                   </div>
+
                   <!-- Submit -->
                    <button
                     @click="handleSubmit"
-                    :disabled="submitting"
-                    class="w-full flex items-center justify-center gap-2
-                       py-3.5 font-semibold rounded-xl transition-colors
-                       disabled:opacity-50
-                       dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:text-white
-                       bg-[#00F0A0] hover:bg-white text-[#0B2B26]">
+                    :disabled="!canSubmit"
+                    :title="!isFormValid
+                      ? 'Please fill in all fields correctly'
+                      : submitCount >= 5
+                        ? 'message limit reached'
+                        : ''"
+                    :class="['w-full flex items-center justify-center gap-2',
+                              'py-3.5 font-semibold rounded-xl transition-all',
+                              canSubmit
+                                ? 'dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:text-white bg-[#00F0A0] hover:bg-white text-[#0B2B26] shadow-lg cursor-pointer'
+                                : 'dark:bg-slate-700 dark:text-slate-500 bg-[#1A4A42] text-[#7BB8B2] cursor-not-allowed opacity-60']"
+                    >
                        <PaperAirplaneIcon class="w-4 h-4" />
                        {{ submitting ? 'Sending...' : 'Send Message' }}
                     </button>
+
+                    <!-- Helper text below button -->
+                     <p v-if="!isFormValid"
+                        class="text-center text-xs mt-3 dark:text-slate-500 text-[#7BB8B2]">
+                        Please fill in all required fields correctly to send your message.
+                     </p>
                </div>
            </div>
          </div>
