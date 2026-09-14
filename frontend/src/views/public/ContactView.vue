@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import PublicLayout from '@/components/public/PublicLayout.vue';
 import { useUiStore } from '@/stores/uiStore';
 import api from '@/api/index.js';
@@ -34,6 +34,8 @@ const submitted   = ref(false)
 const errors      = ref({})
 const lastSubmitTime = ref(0)
 const submitCount = ref(0)
+
+const serverError = ref('')
 
 // Validation rules
 const validations = computed(() => ({
@@ -88,6 +90,11 @@ function touch(field) {
 
 // Show error only after field is touched
 function fieldError(field) {
+  // Show backend error first if it exists
+  if (errors.value[field]?.[0]) {
+    return errors.value[field][0]
+  }
+  // Then show client-side validation error if field is touched.
   if (!touched.value[field]) return ''
   return validations.value[field].valid
     ? ''
@@ -155,13 +162,14 @@ async function handleSubmit() {
   ]
   if (fieldsToCheck.some(containsSuspeciousContent)) {
     errors.value = { message: ['Your message contains invalid content.'] }
-    uiStore.error('Your message contains invalid content. please remove them and try again.')
+    //uiStore.error('Your message contains invalid content. please remove them and try again.')
     return
   }
 
   submitting.value  = true
   lastSubmitTime.value = now
   errors.value      = {}
+  serverError.value = ''
 
   try {
     await api.post('/contact', {
@@ -173,19 +181,23 @@ async function handleSubmit() {
 
     submitCount.value++
     submitted.value = true
-    uiStore.success('Message sent! I will get back to you soon.')
+    //uiStore.success('Message sent! I will get back to you soon.')
     form.value = { name: '', email: '', subject: '', message: ''}
     touched.value = { name: false, email: false, subject: false, message: false }
 
   } catch (err) {
     if (err.response?.status === 422) {
       errors.value = err.response.data.errors ?? {}
-      uiStore.error('Please fix the errors below and try again.')
+      //uiStore.error('Please fix the errors below and try again.')
+      serverError.value = err.response.data.message || 'Please fix the errors below and try again.'
     }
     else if (err.response?.status === 429) {
-      uiStore.error('Too many messages sent. please wait before sending another message.')
+      //uiStore.error('Too many messages sent. please wait before sending another message.')
+      serverError.value = err.response.data.message ||
+  'Too many messages sent. please wait before sending another message.'
     } else {
-      uiStore.error('Failed to send message. Please try again.')
+      //uiStore.error('Failed to send message. Please try again.')
+      serverError.value = err.response.data.message || 'Failed to send message. Please try again.'
     }
   } finally {
     submitting.value = false
@@ -207,6 +219,12 @@ async function handleSubmit() {
   // } finally {
   //   submitting.value = false
   // }
+
+  watch(() => form.value, () => {
+    if (serverError.value) {
+      serverError.value = ''
+    }
+  }, { deep: true })
 }
 </script>
 
@@ -375,9 +393,41 @@ async function handleSubmit() {
                      dark:bg-slate-900 dark:border-slate-800
                      bg-[#0D3530] border-[#1A4A42]">
 
+              <!-- Server error banner - shows backend errors prominently -->
+               <transition
+                  enter-active-class="transition-all duration-300 eas-out"
+                  enter-from-class="opacity-0 -translate-y-2"
+                  enter-to-class="opacity-100 translate-y-0"
+                  leave-active-class="transition-all duration-200 ease-in"
+                  leave-from-class="opacity-100 translate-y-0"
+                  leave-to-class="opacity-0 -translate-y-2"
+               >
+               <div v-if="serverError"
+                    class="mb-6 flex items-start gap-3 px-4 py-4 rounded-xl border
+                          bg-red-500/10 border-red-500/30">
+                    <div class="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                      <span class="text-red-400 text-xs font-bold">!</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-red-400 mb-0.5">
+                        Unable to send message
+                      </p>
+                      <p class="text-xs text-red-300/80">
+                        {{ serverError }}
+                      </p>
+                    </div>
+                    <button
+                      @click="serverError = ''"
+                       class="text-red-400 hover:text-red-300 transition-colors text-lg leading-none shrink-0"
+                       title="Dismiss">
+                       x
+                    </button>
+                </div>
+              </transition>
+
               <!-- Honeypot, hidden from real users filled by bots -->
                <div class="absolute opacity-0 pointer-events-none h-0 overflow-hidden"
-                    arial-hidden="true">
+                    aria-hidden="true">
                   <input
                     v-model="honeypot"
                     type="text"
