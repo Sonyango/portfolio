@@ -45,7 +45,7 @@ Route::get('/posts',    [PostController::class, 'index']);
 Route::get('/posts/{slug}', [PostController::class, 'show']);
 Route::get('/categories',   [CategoryController::class, 'index']);
 Route::get('/tags', [TagController::class, 'index']);
-Route::middleware('throttle:5,1')
+Route::middleware('throttle:3,1')
     ->post('/contact',  [ContactController::class, 'store']);
 
 // Admin Auth routes
