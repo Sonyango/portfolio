@@ -262,7 +262,7 @@ async function handleSubmit() {
    <div class="fixed inset-0 bg-black/60 z-40" />
 
    <!-- Drawer panel -->
-    <div class="fixed right-0 top-0 h-full w-full max-w-2xl bg-slate-800
+    <div class="fixed right-0 top-0 h-full w-full sm:max-w-2xl bg-slate-800
                 border border-slate-700 z-50 overflow-y-auto">
 
       <!-- Header -->

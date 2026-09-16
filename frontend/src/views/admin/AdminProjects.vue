@@ -75,7 +75,8 @@ onMounted(fetchProjects)
     </PageHeader>
 
     <!-- Projects table-->
-     <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+     <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden w-full">
+      <div class="overflow-x-auto w-full">
       <div v-if="loading" class="p-8 text-center text-slate-400">
         Loading...
       </div>
@@ -86,65 +87,67 @@ onMounted(fetchProjects)
         <p class="text-sm mt-1">Click "Add Project" to create your first project.</p>
       </div>
 
-      <table v-else class="w-full">
+      <!-- Table with horizontal scroll -->
+       <div v-else class="overflow-x-auto w-full">
+      <table class="w-full min-w-150">
         <thead>
           <tr class="border-b border-slate-700">
-            <th class="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Project</th>
-            <th class="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Category</th>
-            <th class="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
-            <th class="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Featured</th>
-            <th class="px-6 py-4"></th>
+            <th class="text-left px-4 sm:px:6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Project</th>
+            <th class="text-left px-4 sm:px:6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Category</th>
+            <th class="text-left px-4 sm:px:6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+            <th class="text-left px-4 sm:px:6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider hidden md:table-cell">Featured</th>
+            <th class="px-4 sm:px-6 py-4"></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-700">
           <tr v-for="project in projects" :key="project.id"
             class="hover:bg-slate-700/30 transition-colors">
-            <td class="px-6 py-4">
+            <td class="px-4 sm:px-6 py-4">
               <div class="flex items-center gap-3">
                 <img
                   v-if="project.thumbnail"
                   :src="project.thumbnail"
                   :alt="project.title"
-                  class="w-10 h-10 rounded-lg object-cover shrink-0" />
-                <div v-else class="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center text-slate-400 text-xs shrink-0">
+                  class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover shrink-0" />
+                <div v-else class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-slate-700 flex items-center justify-center text-slate-400 text-xs shrink-0">
                   IMG
                 </div>
                 <div class="min-w-0">
-                  <p class="text-white font-medium text-sm truncate">{{ project.title }}</p>
-                  <p class="text-slate-400 text-xs">{{ project.slug }}</p>
+                  <p class="text-white font-medium text-sm truncate max-w-32 sm:max-w-none">{{ project.title }}</p>
+                  <p class="text-slate-400 text-xs hidden sm:block">{{ project.slug }}</p>
                 </div>
               </div>
             </td>
-            <td class="px-6 py-4 text-slate-300 text-sm">
+            <td class="px-4 sm:px-6 py-4 text-slate-300 text-sm hidden sm:table-cell">
               {{ project.category || '-' }}
             </td>
-            <td class="px-6 py-4">
-              <span :class="['px-2.5 py-1 rounded-full text-xs font-medium',
+            <td class="px-4 sm:px-6 py-4">
+              <span :class="['px-2 py-1 rounded-full text-xs font-medium',
                 project.published
                   ? 'bg-green-500/10 text-green-400'
                   : 'bg-slate-600/50 text-slate-400']">
                   {{ project.published ? 'Published' : 'Draft' }}
               </span>
             </td>
-            <td class="px-6 py-4">
+            <td class="px-4 sm:px-6 py-4 hidden md:table-cell">
               <span v-if="project.featured"
-                class="px-2 5 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400">
+                class="px-2 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400">
                 Featured
               </span>
               <span v-else class="text-slate-500 text-xs">-</span>
             </td>
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-2 justify-end">
+            <td class="px-4 sm:px-6 py-4">
+              <div class="flex items-center gap-1 justify-end">
                 <button
                   @click="openEdit(project)"
                   class="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-                  title="Edit">
+                  >
                   <PencilIcon class="w-4 h-4" />
                 </button>
                 <button
                   @click="confirmDelete(project.id)"
                   class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                  title="Delete">
+                  >
                   <TrashIcon class="w-4 h-4" />
                 </button>
               </div>
@@ -152,6 +155,8 @@ onMounted(fetchProjects)
           </tr>
         </tbody>
       </table>
+      </div>
+      </div>
      </div>
 
      <!--Project form drawer -->

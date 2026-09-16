@@ -6,11 +6,13 @@ defineProps({
 </script>
 
 <template>
-  <div class="flex items-center justify-between mb-8">
-    <div>
-      <h2 class="text-2xl font-bold text-white">{{ title }}</h2>
-      <p class="text-slate-400 mt-1 text-sm">{{ subtitle }}</p>
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8">
+    <div class="min-w-0">
+      <h2 class="text-xl sm:text-2xl font-bold text-white truncate">{{ title }}</h2>
+      <p v-if="subtitle" class="text-slate-400 mt-1 text-sm">{{ subtitle }}</p>
     </div>
-    <slot name="action" />
+    <div class="shrink-0">
+      <slot name="action" />
+    </div>
   </div>
 </template>

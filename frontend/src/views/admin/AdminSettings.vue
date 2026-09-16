@@ -93,7 +93,7 @@ onMounted(fetchSettings)
   <AdminLayout>
     <PageHeader title="Settings" subtitle="Manage your site-wide content and preferences" />
 
-    <div class="max-w-3xl space-y-8">
+    <div class="w-full max-w-3xl space-y-8">
 
       <!-- Profile Image -->
        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-6">

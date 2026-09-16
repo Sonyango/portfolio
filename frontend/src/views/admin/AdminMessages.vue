@@ -46,7 +46,7 @@ onMounted(fetchMessages)
   <AdminLayout>
     <PageHeader title="Messages" subtitle="Contact form submissions from visitors" />
 
-    <div class="grid grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
       <!--Messages list-->
       <div class="col-span-1 space-y-2">
@@ -79,7 +79,7 @@ onMounted(fetchMessages)
       </div>
 
       <!--Message detail-->
-      <div class="col-span-2">
+      <div class="lg:col-span-2">
         <div v-if="!selected"
           class="bg-slate-800 rounded-2xl border border-slate-700 p-12
                  flex items-center justify-center text-slate-400">

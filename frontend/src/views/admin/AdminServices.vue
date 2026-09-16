@@ -83,7 +83,7 @@ onMounted(fetchServices)
       <h3 class="text-white font-semibold mb-4">
         {{ editId ? 'Edit Service' : 'New Service' }}
       </h3>
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormInput label="Title" v-model="form.title"
           placeholder="Web development" :required="true" />
         <FormInput label="Icon" v-model="form.icon"

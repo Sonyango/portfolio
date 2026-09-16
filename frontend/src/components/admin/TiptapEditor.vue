@@ -16,7 +16,12 @@ const emit = defineEmits(['update:modelValue'])
 const editor = useEditor({
   content: props.modelValue,
   extensions: [
-    StarterKit,
+    //StarterKit,
+    //Underline,
+    StarterKit.configure({
+      link: false,
+      underline: false,
+    }),
     Underline,
     Image.configure({ inline: true }),
     Link.configure({ openOnClick: false }),

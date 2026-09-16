@@ -227,7 +227,7 @@ onMounted(fetchExperiences)
           @click="showForm = false" />
 
       <!-- Drawer -->
-       <div class="fixed right-0 top-0 h-full w-full max-w-2xl
+       <div class="fixed right-0 top-0 h-full w-full sm:max-w-2xl
                   bg-slate-800 border border-slate-700 z-50 overflow-y-auto">
         <!-- Header -->
          <div class="flex items-center justify-between px-6 py-4
@@ -393,8 +393,8 @@ onMounted(fetchExperiences)
       <div
         v-for="exp in experiences"
         :key="exp.id"
-        class="bg-slate-800 rounded-2xl border border-slate-700 p-5
-               flex items-start gap-4 hover:border-slate-600 transition-colors">
+        class="bg-slate-800 rounded-2xl border border-slate-700 p-4 sm:p-5
+               flex items-start gap-3 sm:gap-4 hover:border-slate-600 transition-colors w-full">
           <!-- Timeline dot -->
         <div
           class="w-2 h-2 rounded-ful mt-1.5 shrink-0"
@@ -403,12 +403,12 @@ onMounted(fetchExperiences)
             : 'bg-indigo-500'"
         />
         <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-4">
-            <div class="min-w-0">
-              <p class="text-white font-semibold">{{ exp.role }}</p>
-              <p class="text-indigo-400 text-sm">{{ exp.company }}</p>
-              <p class="text-slate-400 text-xs mt-1">
-                {{ exp.start_date }} -
+          <div class="flex items-start justify-between gap-2 sm:gap-4 w-full min-w-0">
+            <div class="min-w-0 flex-1">
+              <p class="text-white font-semibold truncate">{{ exp.role }}</p>
+              <p class="text-indigo-400 text-sm truncate">{{ exp.company }}</p>
+              <p class="text-slate-400 text-xs mt-1 flex-wrap gap-1">
+                <span>{{ exp.start_date }} -</span>
                 <span :class="exp.current ? 'text-green-400 font-medium' : ''">
                   {{ exp.current ? 'Present' : exp.end_date }}
                 </span>
@@ -418,28 +418,31 @@ onMounted(fetchExperiences)
               </p>
             </div>
 
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex flex-col items-end gap-2 shrink-0">
               <!-- Current badge only when current it true -->
                <span
                   v-if="exp.current === true"
                   class="px-2 py-0.5 bg-green-500/10 text-green-400 text-xs
-                        rounded-full border border-green-500/20 font-medium">
+                        rounded-full border border-green-500/20 font-medium whitespace-nowrap">
                   Current
                 </span>
+                <div class="flex items-center gap-1">
+                  <button @click="openEdit(exp)"
+                    class="p-1.5 sm:p-2 text-slate-400 hover:text-white hover:bg-slate-700
+                          rounded-lg transition-colors"
+                    >
+                    <PencilIcon class="w-4 h-4" />
+                  </button>
 
-              <button @click="openEdit(exp)"
-                class="p-2 text-slate-400 hover:text-white hover:bg-slate-700
-                       rounded-lg transition-colors"
-                title="Edit" >
-                <PencilIcon class="w-4 h-4" />
-              </button>
+                  <button @click="deleteId = exp.id"
+                    class="p-1.5 sm:p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10
+                          rounded-lg transition-colors"
+                    >
+                    <TrashIcon class="w-4 h-4" />
+                  </button>
+                </div>
 
-              <button @click="deleteId = exp.id"
-                class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10
-                       rounded-lg transition-colors"
-                title="Delete">
-                <TrashIcon class="w-4 h-4" />
-              </button>
+
             </div>
           </div>
           <p v-if="exp.description" class="text-slate-300 text-sm mt-2 leading-relaxed">

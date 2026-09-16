@@ -83,7 +83,7 @@ onMounted(fetchSkills)
         <h3 class="text-white font-semibold mb-4">
           {{ editId ? 'Edit Skill' : 'New Skill' }}
         </h3>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormInput label="Name" v-model="form.name"
             placeholder="e.g. Laravel" :required="true" />
           <FormInput label="Category" v-model="form.category"

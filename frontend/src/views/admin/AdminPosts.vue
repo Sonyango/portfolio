@@ -75,7 +75,8 @@ onMounted(fetchPosts)
     </PageHeader>
 
     <!-- Posts table -->
-    <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+    <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden w-full">
+      <div class="overflow-x-auto w-full">
 
       <!-- Loading -->
        <div v-if="loading" class="p-8 text-center text-slate-400">
@@ -90,36 +91,37 @@ onMounted(fetchPosts)
       </div>
 
       <!-- Table -->
-      <table v-else class="w-full">
+       <div v-else class="overflow-x-auto w-full">
+      <table class="w-full min-w-125">
         <thead>
           <tr class="border-b border-slate-700">
-            <th class="text-left px-6 py-4 text-xs font-semibold text-slate-400
+            <th class="text-left px-4 sm:px-6 py-4 text-xs font-semibold text-slate-400
                        uppercase tracking-wider">Title</th>
-            <th class="text-left px-6 py-4 text-xs font-semibold text-slate-400
+            <th class="text-left px-4 sm:px-6 py-4 text-xs font-semibold text-slate-400
                        uppercase tracking-wider">Status</th>
-            <th class="text-left px-6 py-4 text-xs font-semibold text-slate-400
-                       uppercase tracking-wider">Published</th>
-            <th class="px-6 py-4"></th>
+            <th class="text-left px-4 sm:px-6 py-4 text-xs font-semibold text-slate-400
+                       uppercase tracking-wider hidden sm:table-cell">Published</th>
+            <th class="px-4 sm:px-6 py-4"></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-700">
           <tr v-for="post in posts" :key="post.id"
             class="hover:bg-slate-700/30 transition-colors">
-            <td class="px-6 py-4">
-              <p class="text-white font-medium text-sm">{{ post.title }}</p>
-              <p class="text-slate-400 text-xs mt-0.5">{{ post.slug }}</p>
+            <td class="px-4 sm:px-6 py-4">
+              <p class="text-white font-medium text-sm truncate max-w-40 sm:max-w-none">{{ post.title }}</p>
+              <p class="text-slate-400 text-xs mt-0.5 hidden sm:block">{{ post.slug }}</p>
             </td>
-            <td class="px-6 py-4">
+            <td class="px-4 sm:px-6 py-4">
               <span :class="['px-2.5 py-1 rounded-full text-xs font-medium capitalize',
-                             statusColors[post.status]]">
+                             statusColors[post.status]] || statusColors.draft">
                   {{ post.status }}
               </span>
             </td>
-            <td class="px-6 py-4 text-slate-400 text-sm">
+            <td class="px-4 sm:px-6 py-4 text-slate-300 text-sm hidden sm:table-cell">
               {{ formatDate(post.published_at)}}
             </td>
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-2 justify-end">
+            <td class="px-4 sm:px-6 py-4">
+              <div class="flex items-center gap-1 justify-end">
                 <button @click="openEdit(post)"
                   class="p-2 text-slate-400 hover:text-white hover:bg-slate-700
                          rounded-lg transition-colors">
@@ -135,6 +137,8 @@ onMounted(fetchPosts)
           </tr>
         </tbody>
       </table>
+      </div>
+      </div>
     </div>
 
     <AdminPostForm
