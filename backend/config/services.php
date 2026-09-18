@@ -14,6 +14,11 @@ return [
     |
     */
 
+    'brevo' => [
+        'api_key'   => env('BREVO_API_KEY'),
+        'from_email' => env('BREVO_FROM_EMAIL', 'stephenonyango82@gmail.com'),
+        'from_name' => env('BREVO_FROM_NAME', 'Stephen\'s Portfolio'),
+    ],
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
