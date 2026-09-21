@@ -152,25 +152,476 @@ class AuthController extends Controller
         RateLimiter::clear($ipKey);
 
         // 7. Check if MFA is enabled
+        if ($user->mfa_enabled) {
+            // Issue a short-lived pending token. User must very TOTP next
+            MfaPending::where('user_id', $user->id)->delete();
+
+            $pending = MfaPending::create([
+                'user_id'    => $user->id,
+                'token'      => Str::random(64),
+                'expires_at' => now()->addMinutes(10),
+            ]);
+
+            return response()->json([
+                'mfa_required'  => true,
+                'mfa_token'     => $pending->token,
+                'message'       => 'Enter your authenticator code to continue.',
+            ]);
+        }
+
+        // 8. No MFA - complete login
+        return $this->completeLogin($user, $ip, $userAgent);
+    }
+
+    // MFA Verification
+    public function verifyMfa(Request $request)
+    {
+        $request->validate([
+            'mfa_token' => 'required|string|size:64',
+            'totp_code' => 'required|string|size:6',
+        ]);
+
+        $pending = MfaPending::where('token', $request->mfa_token)
+                                ->with('user')
+                                ->first();
+
+        if (!$pending || $pending->isExpired()) {
+            return response()->json([
+                'message' => 'Verification session expired. Please login again.'
+            ], 422);
+        }
+
+        $user   = $pending->user;
+        $secret = MfaSecret::where('user_id', $user->id)
+                            ->where('enabled', true)
+                            ->first();
+        if (!$secret) {
+            return response()->json([
+                'message' => 'MFA not configured.'
+            ], 422);
+        }
+
+        $google2fa = new Google2FA();
+        $valid     = $google2fa->verifyKey($secret->secret, $request->totp_code);
+
+        if (!$valid) {
+            AuditLog::record('mfa_failed', [
+                'user_id'    => $user->id,
+                'email'      => $user->email,
+                'ip_address' => $request->ip(),
+            ]);
+            return response()->json(['message' => 'Invalid verification code.'], 422);
+        }
+
+        $pending->delete();
+
+        return $this->completeLogin($user, $request->ip(), $request->userAgent());
     }
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccesstoken()->delete();
+        // $request->user()->currentAccesstoken()->delete();
+        // return response()->json([
+        //     'message' => 'Logged out successfully.'
+        // ]);
+
+        $user = $request->user();
+
+        if ($user) {
+            AuditLog::record('logout', [
+                'user_id'    => $user->id,
+                'email'      => $user->email,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            $request->user()->currentAccessToken()->delete();
+        }
+        return response()->json(['message' => 'Logged out successfully.']);
+    }
+
+    // Get current user
+    public function me(Request $request)
+    {
+        $user = $request->user();
+
+        // Update last activity
+        $user->update(['last_activity_at' => now()]);
+
         return response()->json([
-            'message' => 'Logged out successfully.'
+            'user' => [
+                'id'          => $user->id,
+                'name'        => $user->name,
+                'email'       => $user->email,
+                'role'        => $user->role,
+                'mfa_enabled' => $user->mfa_enabled,
+                'last_login'  => $user->last_login_at?->diffForHumans(),
+            ]
         ]);
     }
 
-    public function me(Request $request)
+    // MFA Setup
+    public function setupMfa(Request $request)
     {
+        $user      = $request->user();
+        $google2fa = new Google2FA();
+        $secret    = $google2fa->generateSecretKey();
+
+        // Store secret (not yet enabled)
+        MfaSecret::updateOrCreate(
+            ['user_id' => $user->id],
+            ['secret'  => $secret, 'enabled' => false]
+        );
+
+        $qrCodeUrl = $google2fa->getQRCodeUrl(
+            config('app.name'),
+            $user->email,
+            $secret
+        );
+
         return response()->json([
-            'user' => [
-                'id' => $request->user()->id,
-                'name' => $request->user()->name,
-                'email' => $request->user()->email,
-                'role' => $request->user()->role,
-            ]
+            'secret'      => $secret,
+            'qr_code_url' => $qrCodeUrl,
+        ]);
+    }
+
+    // MFA Enable
+    public function enableMfa(Request $request)
+    {
+        $request->validate(['totp_code' => 'required|string|size:6']);
+
+        $user   = $request->user();
+        $secret = MfaSecret::where('user_id', $user->id)->first();
+
+        if (!$secret) {
+            return response()->json(['message' => 'Setup MFA first.'], 422);
+        }
+
+        $google2fa = new Google2FA();
+        $valid     = $google2fa->verifyKey($secret->secret, $request->totp_code);
+
+        if (!$valid) {
+            return response()->json(['message' => 'Invalid code. Try again.'], 422);
+        }
+
+        // Generate recovery codes
+        $recoveryCodes = collect(range(1, 8))
+            ->map(fn() => strtoupper(Str::random(4) . '-' . Str::random(4)))
+            ->toArray();
+
+        $secret->update([
+            'enabled'        => true,
+            'recovery_codes' => $recoveryCodes,
+            'enabled_at'     => now(),
+        ]);
+
+        $user->update(['mfa_enabled' => true]);
+
+        AuditLog::record('mfa_enabled', [
+            'user_id'    => $user->id,
+            'email'      => $user->email,
+            'ip_address' => $request->ip(),
+        ]);
+
+        return response()->json([
+            'message'   => 'MFA enabled successfully.',
+            'recovery_codes' => $recoveryCodes,
+        ]);
+    }
+
+    // MFA Disable
+    public function disableMfa(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string',
+            'totp_code' => 'required|string|size:6',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Incorrect password.'], 422);
+        }
+
+        $secret     = MfaSecret::where('user_id', $user->id)->first();
+        $google2fa  = new Google2FA();
+
+        if (!$secret || !$google2fa->verifyKey($secret->secret, $request->totp_code)) {
+            return response()->json(['message' => 'Invalid authenticator code.'], 422);
+        }
+
+        $secret->delete();
+        $user->update(['mfa_enabled' => false]);
+
+        AuditLog::record('mfa_disabled', [
+            'user_id'    => $user->id,
+            'email'      => $user->email,
+            'ip_address' => $request->ip(),
+        ]);
+
+        return response()->json(['message' => 'MFA disabled.']);
+    }
+
+    // Password reset request
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['email' => 'required|email|max:255']);
+
+        $user = User::where('email', strtolower($request->email))->first();
+
+        // Always return same response. Prevent email enumeration
+        $genericResponse = response()->json([
+            'message' => 'If that email exists, a reset link has been sent.'
+        ]);
+
+        if (!$user) return $genericResponse;
+
+        // Rate limit: 3 per hour per email
+        $cacheKey = 'pwd_reset_' . md5($user->email);
+        if (Cache::get($cacheKey, 0) >= 3) {
+            return $genericResponse;
+        }
+
+        Cache::put($cacheKey, Cache::get($cacheKey, 0) + 1, now()->addHour());
+
+        // Generate token
+        $token      = Str::random(64);
+        $resetUrl   = config('app.frontend_url', 'http://localhost:5173')
+                      . '/admin/reset-password?token=' . $token
+                      . '&email=' . urldecode($user->email);
+
+        \DB::table('admin_password_resets')->insert([
+            'email'      => $user->email,
+            'token'      => Hash::make($token),
+            'created_at' => now(),
+        ]);
+
+        $this->brevo->sendPasswordReset($user->email, $user->name, $resetUrl);
+
+        AuditLog::record('password_reset_requested', [
+            'user_id'    => $user->id,
+            'email'      => $user->email,
+            'ip_address' => $request->ip(),
+        ]);
+
+        return $genericResponse;
+    }
+
+    // Password reset confirm
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email'     => 'required|email',
+            'token'     => 'required|string',
+            'password'  => [
+                'required',
+                'string',
+                'min:12',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/',
+            ],
+        ], [
+            'password.regex' => 'Password must contain uppercase, lowercase, numbr, and special character.',
+        ]);
+
+        $reset = \DB::table('admin_password_resets')
+                ->where('email', $request->email)
+                ->where('created_at', '>=', now()->subHour())
+                ->first();
+
+        if (!$reset || !Hash::check($request->token, $reset->token)) {
+            return response()->json([
+                'message' => 'Invalid or expired reset token.'
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json(['message' => 'User not found.'], 404);
+        }
+
+        // Check not reusing recent password
+        if (Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'New password cannot be the same as your current password.'
+            ], 422);
+        }
+
+        $user->update([
+            'password'            => Hash::make($request->password),
+            'password_changed_at' => now(),
+            'failed_attempts'     => 0,
+            'locked_until'        => null,
+        ]);
+
+        // Revoke all tokens. Force re-login
+        $user->tokens()->delete();
+
+        // Delete reset token
+        \DB::table('admin_password_resets')
+            ->where('email', $request->email)
+            ->delete();
+
+        $this->brevo->sendPasswordChanged($user->email, $user->name, $request->ip());
+
+        AuditLog::record('password_reset_completed', [
+            'user_id'    => $user->id,
+            'email'      => $user->email,
+            'ip_address' => $request->ip(),
+        ]);
+
+        return response()->json(['message' => 'Password reset successfully. Please login.']);
+    }
+
+    // Change password (authenticated)
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password'         => [
+                'required',
+                'string',
+                'min:12',
+                'confirmed',
+                'different:current_password',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/',
+            ],
+        ], [
+            'password.regex'    => 'Password must contain uppercase, lowercase, number, and special character.',
+            'password.different' => 'New password must be different from current password.',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect.'], 422);
+        }
+
+        $user->update([
+            'password'            => Hash::make($request->password),
+            'password_changed_at' => now(),
+        ]);
+
+        // Revoke all other tokens
+        $user->tokens()->where('id', '!=', $request->user()->currentAccessToken()->id)->delete();
+
+        $this->brevo->sendPasswordChanged($user->email, $user->name, $request->ip());
+
+        AuditLog::record('password_changed', [
+            'user_id'   => $user->id,
+            'email'     => $user->email,
+            'ip_address' => $request->ip(),
+        ]);
+
+        return response()->json(['message' => 'Password changed successfully.']);
+    }
+
+    // Inactivity check
+    public function checkActivity(Request $request)
+    {
+        $user            = $request->user();
+        $inactivityLimit = 30; // minutes
+
+        if ($user->last_activity_at &&
+            $user->last_activity_at->lt(now()->subMinutes($inactivityLimit))) {
+
+            // Auto logout
+            $user->tokens()->delete();
+
+            AuditLog::record('auto_logout_inactivity', [
+                'user_id'    => $user->id,
+                'email'      => $user->email,
+                'ip_address' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'message'         => 'Session expired due to inactivity.',
+                'session_expired' => true,
+            ], 401);
+
+            }
+            $user->update(['last_activity_at' => now()]);
+            return response()->json(['active' => true]);
+    }
+
+    // Private helpers
+    private function completeLogin(
+        User $user,
+        string $ip,
+        string $userAgent
+    ) {
+        $user->clearFailedAttempts();
+
+        $user->update([
+            'last_login_at'     => now(),
+            'last_login_ip'     => $ip,
+            'last_activity_at'  => now(),
+        ]);
+
+        $token = $user->createToken('admin-token')->plainTextToken;
+
+        $this->recordAttempt($user->email, $ip, $userAgent, true, null);
+
+        // Send login alert email
+        $this->brevo->sendLoginAlert(
+            $user->email,
+            $user->name,
+            $ip,
+            substr($userAgent, 0, 100),
+            now()->format('d M Y H:i:s T')
+        );
+
+        AuditLog::record('login_success', [
+            'user_id'    => $user->id,
+            'email'      => $user->email,
+            'ip_address' => $ip,
+            'user_agent' => $userAgent,
+        ]);
+
+        return response()->json([
+            'message' => 'Login successful.',
+            'token'   => $token,
+            'user'    => [
+                'id'          => $user->id,
+                'name'        => $user->name,
+                'email'       => $user->email,
+                'role'        => $user->role,
+                'mfa_enabled' => $user->mfa_enabled,
+            ],
+        ]);
+    }
+
+    private function invalidCredentialsResponse(int $failedAttempts = 0): \Illuminate\Http\JsonResponse
+    {
+        $response = [
+            'message' => 'Invalid email or password.'
+        ];
+        // Give a hint about remaining attempts before lockout
+        if ($failedAttempts >= 2) {
+            $remaining = max(0, 5 - $failedAttempts);
+            if ($remaining > 0) {
+                $response['attempts_remaining'] = $remaining;
+                $response['warning'] = "Warning: {$remaining} attempt(s) remaining before lockout.";
+            }
+        }
+
+        return response()->json($response, 401);
+    }
+
+    private function recordAttempt(
+        string $email,
+        string $ip,
+        string $userAgent,
+        bool $successful,
+        ?string $reason
+    ): void {
+        LoginAttempt::create([
+            'email'          => $email,
+            'ip_address'     => $ip,
+            'user_agent'     => substr($userAgent, 0, 255),
+            'successful'     => $successful,
+            'failure_reason' => $reason,
+            'attempted_at'   => now(),
         ]);
     }
 }

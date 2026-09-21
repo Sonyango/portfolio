@@ -50,9 +50,31 @@ Route::middleware('throttle:3,1')
 
 // Admin Auth routes
 Route::prefix('admin')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-    Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
+
+    // Route::post('/login', [AuthController::class, 'login']);
+    // Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    // Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
+
+    // Public auth routes
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('/login', [AuthController::class, 'login']);
+        Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+        Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+        Route::post('/mfa/verify', [AuthController::class, 'verifyMfa']);
+    });
+
+    // Protected auth routes
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/me',   [AuthController::class, 'me']);
+        Route::post('/change-password', [AuthController::class, 'changePassword']);
+        Route::get('/activity-check',   [AuthController::class, 'checkActivity']);
+
+        // MFA management
+        Route::get('/mfa/setup', [AuthController::class, 'setupMfa']);
+        Route::post('/mfa/enable',  [AuthController::class, 'enableMfa']);
+        Route::post('/mfa/disable',     [AuthController::class, 'disableMfa']);
+    });
 });
 
 // Admin protected routes
