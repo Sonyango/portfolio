@@ -23,6 +23,7 @@ const mfaRequired = ref(false);
 const mfaToken = ref('');
 const loading = ref(false);
 const lockoutInfo = ref(null); // { seconds, type }
+let messageTimeout = null
 
 // Validation
 const emailValid = computed(() =>
@@ -63,10 +64,20 @@ function formatCountdown(seconds) {
     : `${s}s`
 }
 
+function clearMessagesAfterDelay(seconds = 10) {
+  clearTimeout(messageTimeout)
+
+  messageTimeout = setTimeout(() => {
+    error.value = ''
+    warning.value = ''
+  }, seconds * 1000)
+}
+
 // Clear error when user types
 watch([email, password], () => {
-  error.value = ''
-  warning.value = ''
+  //error.value = ''
+  //warning.value = ''
+  clearMessagesAfterDelay(10)
 })
 
 // Handle login
@@ -132,7 +143,10 @@ async function handleMfaVerify() {
     loading.value = false
   }
 
-  function handleLoginError(result) {
+
+}
+
+function handleLoginError(result) {
     const status = result.status
 
     if (status === 429) {
@@ -153,15 +167,15 @@ async function handleMfaVerify() {
 
     error.value = result.message || 'Invalid email or password.'
     warning.value = result.warning || ''
+    clearMessagesAfterDelay(10)
   }
 
-  function resetToLogin() {
+function resetToLogin() {
     mfaRequired.value = false
     mfaToken.value    = ''
     totpCode.value    = ''
     error.value       = ''
   }
-}
 </script>
 
 <template>
@@ -207,7 +221,7 @@ async function handleMfaVerify() {
             <!-- TOTP input -->
              <div class="mb-5">
               <label class="block text-sm font-medium text-slate-300 mb-1">
-                Authenticator <Code></Code>
+                Authenticator Code
               </label>
               <input
                 v-model="totpCode"
@@ -405,8 +419,7 @@ async function handleMfaVerify() {
                   </div>
 
                   <!-- Security badge -->
-                   <div class="mt-6 flex items-center justify-center gap-2
-                              text-xs text-slate-500">
+                   <div class="mt-6 flex items-center justify-center gap-2 text-xs text-slate-500">
                      <ShieldCheckIcon class="w-4 h-4 text-indigo-500" />
                      <span>Protected with rate limiting and account lockout.</span>
                    </div>

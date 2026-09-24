@@ -74,7 +74,7 @@ class User extends Authenticatable
             $attempts >= 10 => now()->addHours(24),
             $attempts >= 7 => now()->addMinutes(30),
             $attempts >= 5 => now()->addMinutes(15),
-            $attempts >= 3 => now()->addMinutes(5),
+            //$attempts >= 3 => now()->addMinutes(5),
             default        => null,
         };
 

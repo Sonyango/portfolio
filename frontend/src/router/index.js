@@ -11,6 +11,8 @@ const ProjectDetail = () => import('@/views/public/ProjectDetail.vue')
 const PostDetail  = () => import('@/views/public/PostDetail.vue')
 
 // Admin views (lazy loaded)
+const AdminForgotPassword = () => import('@/views/admin/AdminForgotPassword.vue')
+const AdminResetPassword = () => import('@/views/admin/AdminResetPassword.vue')
 const AdminLogin = () => import('@/views/admin/AdminLogin.vue')
 const AdminDashboard = () => import('@/views/admin/AdminDashboard.vue')
 const AdminProjects = () => import('@/views/admin/AdminProjects.vue')
@@ -32,8 +34,10 @@ const routes = [
   { path: '/blog/:slug',  name: 'post.detail',  component: PostDetail },
 
   // **** Admin routes (requires auth) ********
-  { path: '/admin/login', name: 'admin.login',  component:  AdminLogin, meta: { guestOnly: true }},
+  { path: '/admin/forgot-password', name: 'admin.forgot-password', component: AdminForgotPassword, meta: { guestOnly: true} },
+  { path: '/admin/reset-password', name: 'admin.reset-password', component: AdminResetPassword, meta: { guestOnly: true } },
 
+  { path: '/admin/login', name: 'admin.login',  component:  AdminLogin, meta: { guestOnly: true }},
   { path: '/admin', name: 'admin.dashboard',  component:  AdminDashboard, meta: { requiresAuth: true } },
   { path: '/admin/projects', name: 'admin.projects', component: AdminProjects, meta: { requiresAuth: true } },
   { path: '/admin/posts', name: 'admin.posts', component: AdminPosts, meta: { requiresAuth: true } },

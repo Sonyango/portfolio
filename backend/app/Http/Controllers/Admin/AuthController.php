@@ -144,6 +144,16 @@ class AuthController extends Controller
                     'ip_address' => $ip,
                 ]);
             }
+
+            $lockedUser = $user->fresh();
+
+            if ($lockedUser->isLocked()) {
+                return response()->json([
+                    'message'       => 'Account temporarily locked.',
+                    'retry_after'   => $lockedUser->lockoutSecondsRemaining(),
+                    'lockout_type'  => 'account',
+                ], 423);
+            }
             // Generic error. Not revealing which field is wrong.
             return $this->invalidCredentialsresponse($user->fresh()->failed_attempts);
         }

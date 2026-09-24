@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import ToastNotification from '@/components/admin/ToastNotification.vue';
@@ -21,6 +21,19 @@ import {
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+
+// Ping activity every 5 minutes to check for inactivity
+let activityInterval = null
+
+onMounted(() => {
+  activityInterval = setInterval(() => {
+    authStore.pingActivity()
+  }, 5 * 60 * 1000) // 5 minutes
+})
+
+onUnmounted(() => {
+  clearInterval(activityInterval)
+})
 
 // Sidebar open state(closed by default on mobole)
 const sidebarOpen = ref(false)
