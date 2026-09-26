@@ -74,11 +74,10 @@ function clearMessagesAfterDelay(seconds = 10) {
 }
 
 // Clear error when user types
-watch([email, password], () => {
-  //error.value = ''
-  //warning.value = ''
-  clearMessagesAfterDelay(10)
-})
+// watch([email, password], () => {
+
+//   clearMessagesAfterDelay(10)
+// })
 
 // Handle login
 async function handleLogin() {
@@ -116,6 +115,7 @@ async function handleLogin() {
 
   } catch {
     error.value = 'An unexpected error occured. Please try again.'
+    clearMessagesAfterDelay(60)
   } finally {
     loading.value = false
   }
@@ -167,7 +167,7 @@ function handleLoginError(result) {
 
     error.value = result.message || 'Invalid email or password.'
     warning.value = result.warning || ''
-    clearMessagesAfterDelay(10)
+    clearMessagesAfterDelay(60)
   }
 
 function resetToLogin() {
@@ -176,6 +176,13 @@ function resetToLogin() {
     totpCode.value    = ''
     error.value       = ''
   }
+
+  watch(emailValid, (isValid) => {
+    if (isValid && error.value) {
+      clearTimeout(messageTimeout)
+      error.value = ''
+    }
+  })
 </script>
 
 <template>

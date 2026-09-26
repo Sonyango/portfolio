@@ -44,7 +44,7 @@ const passwordStrength = computed(() => {
 })
 
 const isValid = computed(() => {
-  return password.value.length >= 8 &&
+  return password.value.length >= 12 &&
           /[A-Z]/.test(password.value) &&
           /[a-z]/.test(password.value) &&
           /\d/.test(password.value) &&
@@ -62,7 +62,7 @@ async function handleReset() {
       email:            email.value,
       token:            token.value,
       password:         password.value,
-      password_confirm: confirmPassword.value
+      password_confirmation: confirmPassword.value
     })
 
     success.value = true
@@ -128,7 +128,7 @@ async function handleReset() {
                   <input
                     v-model="password"
                     :type="showPass ? 'text' : 'password'"
-                    placeholder="Min 8 characters with uppercase, number, symbol"
+                    placeholder="Min 12 characters with uppercase, number, symbol"
                     class="w-full bg-slate-900 border border-slate-600 rounded-xl
                             px-4 py-3 pr-12 text-white placeholder-slate-500
                             focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
@@ -160,7 +160,7 @@ async function handleReset() {
                  <!-- Requirements -->
                   <ul class="mt-2 space-y-1">
                     <li v-for="req in [
-                      { label: 'At least 8 characters', ok: password.length >= 8 },
+                      { label: 'At least 12 characters', ok: password.length >= 8 },
                       { label: 'Uppercase letter',      ok: /[A-Z]/.test(password) },
                       { label: 'Lowercase letter',      ok: /[a-z]/.test(password) },
                       { label: 'Number',                ok: /\d/.test(password) },
@@ -219,7 +219,7 @@ async function handleReset() {
                       : 'bg-slate-700 text-slate-500 cursor-not-allowed']">
                   {{ loading ? 'Resetting...' : 'Reset Password' }}
                 </button>
-                
+
             </div>
            </template>
       </div>

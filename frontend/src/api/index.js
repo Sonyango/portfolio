@@ -22,14 +22,22 @@ api.interceptors.request.use(config => {
     config.headers['Content-Type'] = 'application/json'
   }
   // For FormData, let the browser set Content-Type with boundary automatically
-  
+
   return config
 })
 
 api.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
+    // if (err.response?.status === 401) {
+    //   localStorage.removeItem('admin_token')
+    //   window.location.href = '/admin/login'
+    // }
+    // return Promise.reject(err)
+
+    const isLoginRequest = err.config?.url?.includes('/admin/login')
+
+    if (err.response?.status === 401 && !isLoginRequest) {
       localStorage.removeItem('admin_token')
       window.location.href = '/admin/login'
     }
