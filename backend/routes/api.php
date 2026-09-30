@@ -37,16 +37,16 @@ Route::get('/profile-image', [ProfileImageServeController::class, 'show'])->name
 // Public routes
 Route::get('/settings', [SettingController::class, 'index']);
 Route::get('/projects', [ProjectController::class, 'index']);
-Route::get('/projects/{slug}',  [ProjectController::class, 'show']);
-Route::get('/skills',   [SkillController::class, 'index']);
-Route::get('/experiences',  [ExperienceController::class, 'index']);
+Route::get('/projects/{slug}', [ProjectController::class, 'show']);
+Route::get('/skills', [SkillController::class, 'index']);
+Route::get('/experiences', [ExperienceController::class, 'index']);
 Route::get('/services', [ServiceController::class, 'index']);
-Route::get('/posts',    [PostController::class, 'index']);
+Route::get('/posts', [PostController::class, 'index']);
 Route::get('/posts/{slug}', [PostController::class, 'show']);
-Route::get('/categories',   [CategoryController::class, 'index']);
+Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/tags', [TagController::class, 'index']);
 Route::middleware('throttle:3,1')
-    ->post('/contact',  [ContactController::class, 'store']);
+    ->post('/contact', [ContactController::class, 'store']);
 
 // Admin Auth routes
 Route::prefix('admin')->group(function () {
@@ -64,65 +64,66 @@ Route::prefix('admin')->group(function () {
     });
 
     // Protected auth routes
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'idle.timeout'])->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/me',   [AuthController::class, 'me']);
+        Route::get('/me', [AuthController::class, 'me']);
         Route::post('/change-password', [AuthController::class, 'changePassword']);
-        Route::get('/activity-check',   [AuthController::class, 'checkActivity']);
+        Route::post('/activity-check', [AuthController::class, 'checkActivity'])
+            ->name('admin.activity-check');
 
         // MFA management
         Route::get('/mfa/setup', [AuthController::class, 'setupMfa']);
-        Route::post('/mfa/enable',  [AuthController::class, 'enableMfa']);
-        Route::post('/mfa/disable',     [AuthController::class, 'disableMfa']);
+        Route::post('/mfa/enable', [AuthController::class, 'enableMfa']);
+        Route::post('/mfa/disable', [AuthController::class, 'disableMfa']);
     });
 });
 
 // Admin protected routes
-Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
+Route::prefix('admin')->middleware(['auth:sanctum', 'idle.timeout'])->group(function () {
 
     // Projects
-    Route::get('/projects',     [AdminProjectController::class, 'index']);
-    Route::post('/projects',        [AdminProjectController::class, 'store']);
-    Route::put('/projects/{project}',       [AdminProjectController::class, 'update']);
-    Route::delete('/projects/{project}',        [AdminProjectController::class, 'destroy']);
+    Route::get('/projects', [AdminProjectController::class, 'index']);
+    Route::post('/projects', [AdminProjectController::class, 'store']);
+    Route::put('/projects/{project}', [AdminProjectController::class, 'update']);
+    Route::delete('/projects/{project}', [AdminProjectController::class, 'destroy']);
 
     // Posts
-    Route::get('/posts',             [AdminPostController::class, 'index']);
-    Route::post('/posts',            [AdminPostController::class, 'store']);
-    Route::put('/posts/{post}',      [AdminPostController::class, 'update']);
-    Route::delete('/posts/{post}',   [AdminPostController::class, 'destroy']);
+    Route::get('/posts', [AdminPostController::class, 'index']);
+    Route::post('/posts', [AdminPostController::class, 'store']);
+    Route::put('/posts/{post}', [AdminPostController::class, 'update']);
+    Route::delete('/posts/{post}', [AdminPostController::class, 'destroy']);
 
     //Skills
-    Route::get('/skills',            [AdminSkillController::class, 'index']);
-    Route::post('/skills',           [AdminSkillController::class, 'store']);
-    Route::put('/skills/{skill}',    [AdminSkillController::class, 'update']);
+    Route::get('/skills', [AdminSkillController::class, 'index']);
+    Route::post('/skills', [AdminSkillController::class, 'store']);
+    Route::put('/skills/{skill}', [AdminSkillController::class, 'update']);
     Route::delete('/skills/{skill}', [AdminSkillController::class, 'destroy']);
 
     //Experiences
-    Route::get('/experiences',                   [AdminExperienceController::class, 'index']);
-    Route::post('/experiences',                  [AdminExperienceController::class, 'store']);
-    Route::put('/experiences/{experience}',      [AdminExperienceController::class, 'update']);
-    Route::delete('/experiences/{experience}',   [AdminExperienceController::class, 'destroy']);
+    Route::get('/experiences', [AdminExperienceController::class, 'index']);
+    Route::post('/experiences', [AdminExperienceController::class, 'store']);
+    Route::put('/experiences/{experience}', [AdminExperienceController::class, 'update']);
+    Route::delete('/experiences/{experience}', [AdminExperienceController::class, 'destroy']);
     // Services
-    Route::get('/services',              [AdminServiceController::class, 'index']);
-    Route::post('/services',             [AdminServiceController::class, 'store']);
-    Route::put('/services/{service}',    [AdminServiceController::class, 'update']);
+    Route::get('/services', [AdminServiceController::class, 'index']);
+    Route::post('/services', [AdminServiceController::class, 'store']);
+    Route::put('/services/{service}', [AdminServiceController::class, 'update']);
     Route::delete('/services/{service}', [AdminServiceController::class, 'destroy']);
 
     // Categories
-    Route::get('/categories',                [AdminCategoryController::class, 'index']);
-    Route::post('/categories',               [AdminCategoryController::class, 'store']);
-    Route::put('/categories/{category}',     [AdminCategoryController::class, 'update']);
-    Route::delete('/categories/{category}',  [AdminCategoryController::class, 'destroy']);
+    Route::get('/categories', [AdminCategoryController::class, 'index']);
+    Route::post('/categories', [AdminCategoryController::class, 'store']);
+    Route::put('/categories/{category}', [AdminCategoryController::class, 'update']);
+    Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
 
     // Tags
-    Route::get('/tags',          [AdminTagController::class, 'index']);
-    Route::post('/tags',         [AdminTagController::class, 'store']);
+    Route::get('/tags', [AdminTagController::class, 'index']);
+    Route::post('/tags', [AdminTagController::class, 'store']);
     Route::delete('/tags/{tag}', [AdminTagController::class, 'destroy']);
 
     // Settings
-    Route::get('/settings',  [AdminSettingController::class, 'index']);
-    Route::put('/settings',  [AdminSettingController::class, 'update']);
+    Route::get('/settings', [AdminSettingController::class, 'index']);
+    Route::put('/settings', [AdminSettingController::class, 'update']);
 
     // Media
     Route::get('/media', [AdminMediaController::class, 'index']);
@@ -130,9 +131,9 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     Route::delete('/media/{media}', [AdminMediaController::class, 'destroy']);
 
     // Messages
-    Route::get('/messages',                      [MessageController::class, 'index']);
-    Route::patch('/messages/{message}/read',     [MessageController::class, 'markRead']);
-    Route::delete('/messages/{message}',         [MessageController::class, 'destroy']);
+    Route::get('/messages', [MessageController::class, 'index']);
+    Route::patch('/messages/{message}/read', [MessageController::class, 'markRead']);
+    Route::delete('/messages/{message}', [MessageController::class, 'destroy']);
 
     // Profile Image
     Route::post('/profile-image', [ProfileImageController::class, 'store']);

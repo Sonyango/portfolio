@@ -4,7 +4,6 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
   withCredentials: false,
   headers: {
-    //'Content-Type': 'application/json',
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   }
@@ -21,7 +20,6 @@ api.interceptors.request.use(config => {
   if (!(config.data instanceof FormData)) {
     config.headers['Content-Type'] = 'application/json'
   }
-  // For FormData, let the browser set Content-Type with boundary automatically
 
   return config
 })
@@ -29,17 +27,30 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   res => res,
   err => {
-    // if (err.response?.status === 401) {
+
+    // const isLoginRequest = err.config?.url?.includes('/admin/login')
+
+    // if (err.response?.status === 401 && !isLoginRequest) {
     //   localStorage.removeItem('admin_token')
     //   window.location.href = '/admin/login'
     // }
-    // return Promise.reject(err)
 
-    const isLoginRequest = err.config?.url?.includes('/admin/login')
+    if (err.response?.status === 401) {
+      const data        = err.response.data ?? {}
+      const sessionExpired = data.session_expired === true
 
-    if (err.response?.status === 401 && !isLoginRequest) {
-      localStorage.removeItem('admin_token')
-      window.location.href = '/admin/login'
+      // Only redirects if there is stored token (logged in user)
+      if (localStorage.getItem('admin_token')) {
+        localStorage.removeItem('admin_token')
+        localStorage.removeItem('admin_last_activity_at')
+
+        const reason = sessionExpired ? 'inactivity' : 'unauthorized'
+
+        // Prevents redirect loop on the login page
+        if (!window.location.pathname.includes('/admin/login')) {
+          window.location.href = `/admin/login?reason=${reason}`
+        }
+      }
     }
     return Promise.reject(err)
   }

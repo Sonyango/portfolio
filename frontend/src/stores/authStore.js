@@ -9,6 +9,12 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!user.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
 
+  function setAuthenticatedSession(token, authenticatedUser) {
+    localStorage.setItem('admin_token', token)
+    localStorage.setItem('admin_last_activity_at', String(Date.now()))
+    user.value = authenticatedUser
+  }
+
   // Login
   async function login(email, password) {
     loading.value = true
@@ -29,8 +35,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       // Fallback: if somehow token is returned (shouldn't happen)
       if (data.token) {
-        localStorage.setItem('admin_token', data.token)
-        user.value = data.user
+        setAuthenticatedSession(data.token, data.user)
         return { success: true }
       }
 
@@ -60,8 +65,7 @@ export const useAuthStore = defineStore('auth', () => {
         code,
       })
 
-      localStorage.setItem('admin_token', data.token)
-      user.value = data.user
+      setAuthenticatedSession(data.token, data.user)
       return { success: true }
 
     } catch (err) {
@@ -98,6 +102,7 @@ export const useAuthStore = defineStore('auth', () => {
       await api.post('/admin/logout')
     } finally {
       localStorage.removeItem('admin_token')
+      localStorage.removeItem('admin_last_activity_at')
       user.value = null
     }
   }
@@ -112,27 +117,8 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = data.user
     } catch (error) {
       localStorage.removeItem('admin_token')
+      localStorage.removeItem('admin_last_activity_at')
       user.value = null
-    }
-  }
-
-  // Inactivity check
-  async function pingActivity() {
-    if (!user.value) return
-
-    try {
-      const { data } = await api.get('/admin/activity-check')
-      if (data.session_expired) {
-        localStorage.removeItem('admin_token')
-        user.value = null
-        window.location.href = '/admin/login?reason=inactivity'
-      }
-    } catch (error) {
-      if (error.response?.status === 401) {
-        localStorage.removeItem('admin_token')
-        user.value = null
-        window.location.href = '/admin/login?reason=inactivity'
-      }
     }
   }
 
@@ -140,6 +126,6 @@ export const useAuthStore = defineStore('auth', () => {
     user, loading,
     isAuthenticated, isAdmin,
     login, verifyMfa, resendEmailCode,
-    logout, fetchMe, pingActivity,
+    logout, fetchMe,
    }
 })

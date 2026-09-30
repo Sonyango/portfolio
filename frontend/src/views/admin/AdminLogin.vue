@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import {
   EyeIcon,
@@ -11,6 +11,7 @@ import {
   DevicePhoneMobileIcon,
 } from '@heroicons/vue/24/outline';
 
+const route  = useRoute()
 const router = useRouter();
 const authStore = useAuthStore();
 
@@ -113,6 +114,15 @@ function startResendCooldown(seconds = 60) {
     }
   }, 1000)
 }
+
+onMounted(() => {
+  const reason = route.query.reason
+  if (reason === 'inactivity') {
+    setError('Session expired due to inactivity. Please login again.', 120)
+  } else if (reason === 'unauthorized') {
+    setError('Your session is no longer valid. Please login again.', 120)
+  }
+})
 
 // Cleanup on unmount
 onUnmounted(() => {

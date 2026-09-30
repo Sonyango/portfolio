@@ -19,7 +19,9 @@ use PragmaRX\Google2FA\Google2FA;
 
 class AuthController extends Controller
 {
-    public function __construct(private BrevoService $brevo){}
+    public function __construct(private BrevoService $brevo)
+    {
+    }
 
     private function maskEmail(string $email): string
     {
@@ -42,13 +44,13 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email'    => 'required|email:rfc|max:255',
+            'email' => 'required|email:rfc|max:255',
             'password' => 'required|string|min:8|max:128',
         ]);
 
-        $ip        = $request->ip();
+        $ip = $request->ip();
         $userAgent = $request->userAgent() ?? 'Unknown';
-        $email     = strtolower(trim($credentials['email']));
+        $email = strtolower(trim($credentials['email']));
 
         // IP level rate limting
         $ipKey = 'login_ip_' . md5($ip);
@@ -56,8 +58,8 @@ class AuthController extends Controller
             $seconds = RateLimiter::availableIn($ipKey);
             $this->recordAttempt($email, $ip, $userAgent, false, 'ip_rate_limited');
             return response()->json([
-                'message'      => 'Too many login attempts from your location. Try again later.',
-                'retry_after'  => $seconds,
+                'message' => 'Too many login attempts from your location. Try again later.',
+                'retry_after' => $seconds,
                 'lockout_type' => 'ip',
             ], 429);
         }
@@ -79,15 +81,15 @@ class AuthController extends Controller
         if ($user->isLocked()) {
             $seconds = $user->lockoutSecondsRemaining();
             AuditLog::record('login_blocked_lockout', [
-                'user_id'    => $user->id,
-                'email'      => $email,
+                'user_id' => $user->id,
+                'email' => $email,
                 'ip_address' => $ip,
                 'user_agent' => $userAgent,
             ]);
             return response()->json([
-                'message'      => 'Account temporarily locked. Try again in '
-                                  . ceil($seconds / 60) . ' minute(s).',
-                'retry_after'  => $seconds,
+                'message' => 'Account temporarily locked. Try again in '
+                    . ceil($seconds / 60) . ' minute(s).',
+                'retry_after' => $seconds,
                 'lockout_type' => 'account',
             ], 423);
         }
@@ -102,12 +104,15 @@ class AuthController extends Controller
 
             if ($fresh->failed_attempts === 3) {
                 $this->brevo->sendSuspiciousLoginAlert(
-                    $user->email, $user->name, $ip, $fresh->failed_attempts
+                    $user->email,
+                    $user->name,
+                    $ip,
+                    $fresh->failed_attempts
                 );
                 AuditLog::record('login_suspicious_activity', [
-                    'user_id'         => $user->id,
-                    'email'           => $email,
-                    'ip_address'      => $ip,
+                    'user_id' => $user->id,
+                    'email' => $email,
+                    'ip_address' => $ip,
                     'failed_attempts' => $fresh,
                 ]);
             }
@@ -115,11 +120,14 @@ class AuthController extends Controller
             if ($fresh->isLocked()) {
                 $minutes = ceil($fresh->lockoutSecondsRemaining() / 60);
                 $this->brevo->sendAccountLockout(
-                    $user->email, $user->name, $ip, $minutes
+                    $user->email,
+                    $user->name,
+                    $ip,
+                    $minutes
                 );
                 AuditLog::record('login_account_locked', [
-                    'user_id'    => $user->id,
-                    'emal'       => $email,
+                    'user_id' => $user->id,
+                    'emal' => $email,
                     'ip_address' => $ip,
                 ]);
             }
@@ -135,61 +143,61 @@ class AuthController extends Controller
         MfaPending::where('user_id', $user->id)->delete();
 
         $hasTotpEnrolled = MfaSecret::where('user_id', $user->id)
-                                    ->where('enabled', true)
-                                    ->exists();
+            ->where('enabled', true)
+            ->exists();
 
         if ($hasTotpEnrolled) {
             // TOTP path
             $pending = MfaPending::create([
-                'user_id'    => $user->id,
-                'token'      => Str::random(64),
-                'method'     => 'totp',
+                'user_id' => $user->id,
+                'token' => Str::random(64),
+                'method' => 'totp',
                 'expires_at' => now()->addMinutes(10),
             ]);
 
             AuditLog::record('login_mfa_totp_challenge', [
-                'user_id'    => $user->id,
-                'email'      => $email,
+                'user_id' => $user->id,
+                'email' => $email,
                 'ip_address' => $ip,
             ]);
 
             return response()->json([
                 'mfa_required' => true,
-                'mfa_token'    => $pending->token,
-                'method'       => 'totp',
-                'message'      => 'Enter the 6-digit code from your authenticator app.',
+                'mfa_token' => $pending->token,
+                'method' => 'totp',
+                'message' => 'Enter the 6-digit code from your authenticator app.',
             ]);
         } else {
             // Email OTP path
             // Generate a 6-digit code
-            $code       = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-            $codeHash   = Hash::make($code);
+            $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $codeHash = Hash::make($code);
 
             $pending = MfaPending::create([
-                'user_id'         => $user->id,
-                'token'           => Str::random(64),
-                'method'          => 'email',
+                'user_id' => $user->id,
+                'token' => Str::random(64),
+                'method' => 'email',
                 'email_code_hash' => $codeHash,
-                'expires_at'      => now()->addMinutes(10),
+                'expires_at' => now()->addMinutes(10),
             ]);
 
             // Send code via brevo
             $sent = $this->brevo->sendMfaCode($user->email, $user->name, $code);
 
             AuditLog::record('login_mfa_email_challenge', [
-                'user_id'    => $user->id,
-                'email'      => $email,
+                'user_id' => $user->id,
+                'email' => $email,
                 'ip_address' => $ip,
                 'email_sent' => $sent,
             ]);
 
             return response()->json([
-                'mfa_required'  => true,
-                'mfa_token'     => $pending->token,
-                'method'        => 'email',
-                'message'       => 'A 6-digit verification code has been sent to '
-                                    . $this->maskEmail($user->email),
-                'email_hint'    => $this->maskEmail($user->email),
+                'mfa_required' => true,
+                'mfa_token' => $pending->token,
+                'method' => 'email',
+                'message' => 'A 6-digit verification code has been sent to '
+                    . $this->maskEmail($user->email),
+                'email_hint' => $this->maskEmail($user->email),
             ]);
         }
     }
@@ -241,13 +249,13 @@ class AuthController extends Controller
 
         $request->validate([
             'mfa_token' => 'required|string|size:64',
-            'code'      => 'required|string|min:6|max:8',
+            'code' => 'required|string|min:6|max:8',
         ]);
 
         // Retrieve pending challenge
         $pending = MfaPending::where('token', $request->mfa_token)
-                                ->with('user')
-                                ->first();
+            ->with('user')
+            ->first();
 
         if (!$pending) {
             return response()->json([
@@ -266,12 +274,12 @@ class AuthController extends Controller
         if ($pending->hasExceededAttempts()) {
             $pending->delete();
             AuditLog::record('mfa_max_attempts_exceded', [
-                'user_id'    => $pending->user_id,
+                'user_id' => $pending->user_id,
                 'ip_address' => $request->ip(),
             ]);
             return response()->json([
-                'message'   => 'Too many failed attempts. Please login again.',
-                'expired'   => true
+                'message' => 'Too many failed attempts. Please login again.',
+                'expired' => true
             ], 429);
         }
 
@@ -282,8 +290,8 @@ class AuthController extends Controller
 
         if ($pending->method === 'totp') {
             $secret = MfaSecret::where('user_id', $user->id)
-                                ->where('enabled', true)
-                                ->first();
+                ->where('enabled', true)
+                ->first();
 
             if (!$secret) {
                 $pending->delete();
@@ -293,7 +301,7 @@ class AuthController extends Controller
             }
 
             $google2fa = new Google2FA();
-            $verified  = $google2fa->verifyKey(
+            $verified = $google2fa->verifyKey(
                 $secret->secret,
                 $request->code,
                 2 // allow 2 time-steps window (±1 minute)
@@ -310,15 +318,15 @@ class AuthController extends Controller
             $attemptsLeft = 5 - $pending->fresh()->attempts;
 
             AuditLog::record('mfa_failed', [
-                'user_id'    => $user->id,
-                'email'      => $user->email,
-                'method'     => $pending->method,
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'method' => $pending->method,
                 'ip_address' => $request->ip(),
-                'metadata'   => ['attempts_left' => $attemptsLeft],
+                'metadata' => ['attempts_left' => $attemptsLeft],
             ]);
 
             return response()->json([
-                'message'       => 'Invalid verification code.',
+                'message' => 'Invalid verification code.',
                 'attempts_left' => max(0, $attemptsLeft),
             ], 422);
         }
@@ -345,9 +353,9 @@ class AuthController extends Controller
         }
 
         $pending = MfaPending::where('token', $request->mfa_token)
-                                ->where('method', 'email')
-                                ->with('user')
-                                ->first();
+            ->where('method', 'email')
+            ->with('user')
+            ->first();
         if (!$pending || $pending->isExpired()) {
             return response()->json([
                 'message' => 'Session expired. Please login again.',
@@ -355,15 +363,15 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user       = $pending->user;
-        $code       = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        $codeHash   = Hash::make($code);
+        $user = $pending->user;
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $codeHash = Hash::make($code);
 
         // Update code and extend expiry by 10 minutes
         $pending->update([
             'email_code_hash' => $codeHash,
-            'expires_at'      => now()->addMinutes(10),
-            'attempts'        => 0,
+            'expires_at' => now()->addMinutes(10),
+            'attempts' => 0,
         ]);
 
         $this->brevo->sendMfaCode($user->email, $user->name, $code);
@@ -371,14 +379,14 @@ class AuthController extends Controller
         Cache::put($resendKey, Cache::get($resendKey, 0) + 1, now()->addMinutes(10));
 
         AuditLog::record('mfa_email_resent', [
-            'user_id'       => $user->id,
-            'email'         => $user->email,
-            'ip_address'    => $request->ip(),
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip_address' => $request->ip(),
         ]);
 
         return response()->json([
-            'message'       => 'A new code has been sent to ' . $this->maskEmail($user->email),
-            'email_hint'    => $this->maskEmail($user->email),
+            'message' => 'A new code has been sent to ' . $this->maskEmail($user->email),
+            'email_hint' => $this->maskEmail($user->email),
         ]);
     }
 
@@ -393,8 +401,8 @@ class AuthController extends Controller
 
         if ($user) {
             AuditLog::record('logout', [
-                'user_id'    => $user->id,
-                'email'      => $user->email,
+                'user_id' => $user->id,
+                'email' => $user->email,
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -409,17 +417,14 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        // Update last activity
-        $user->update(['last_activity_at' => now()]);
-
         return response()->json([
             'user' => [
-                'id'          => $user->id,
-                'name'        => $user->name,
-                'email'       => $user->email,
-                'role'        => $user->role,
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
                 'mfa_enabled' => $user->mfa_enabled,
-                'last_login'  => $user->last_login_at?->diffForHumans(),
+                'last_login' => $user->last_login_at?->diffForHumans(),
             ]
         ]);
     }
@@ -427,14 +432,14 @@ class AuthController extends Controller
     // MFA Setup
     public function setupMfa(Request $request)
     {
-        $user      = $request->user();
+        $user = $request->user();
         $google2fa = new Google2FA();
-        $secret    = $google2fa->generateSecretKey();
+        $secret = $google2fa->generateSecretKey();
 
         // Store secret (not yet enabled)
         MfaSecret::updateOrCreate(
             ['user_id' => $user->id],
-            ['secret'  => $secret, 'enabled' => false]
+            ['secret' => $secret, 'enabled' => false]
         );
 
         $qrCodeUrl = $google2fa->getQRCodeUrl(
@@ -444,7 +449,7 @@ class AuthController extends Controller
         );
 
         return response()->json([
-            'secret'      => $secret,
+            'secret' => $secret,
             'qr_code_url' => $qrCodeUrl,
         ]);
     }
@@ -454,7 +459,7 @@ class AuthController extends Controller
     {
         $request->validate(['totp_code' => 'required|string|size:6']);
 
-        $user   = $request->user();
+        $user = $request->user();
         $secret = MfaSecret::where('user_id', $user->id)->first();
 
         if (!$secret) {
@@ -462,7 +467,7 @@ class AuthController extends Controller
         }
 
         $google2fa = new Google2FA();
-        $valid     = $google2fa->verifyKey($secret->secret, $request->totp_code);
+        $valid = $google2fa->verifyKey($secret->secret, $request->totp_code);
 
         if (!$valid) {
             return response()->json(['message' => 'Invalid code. Try again.'], 422);
@@ -474,21 +479,21 @@ class AuthController extends Controller
             ->toArray();
 
         $secret->update([
-            'enabled'        => true,
+            'enabled' => true,
             'recovery_codes' => $recoveryCodes,
-            'enabled_at'     => now(),
+            'enabled_at' => now(),
         ]);
 
         $user->update(['mfa_enabled' => true]);
 
         AuditLog::record('mfa_enabled', [
-            'user_id'    => $user->id,
-            'email'      => $user->email,
+            'user_id' => $user->id,
+            'email' => $user->email,
             'ip_address' => $request->ip(),
         ]);
 
         return response()->json([
-            'message'   => 'Authenticator app enrolled. Future logins will use TOTP',
+            'message' => 'Authenticator app enrolled. Future logins will use TOTP',
             'recovery_codes' => $recoveryCodes,
         ]);
     }
@@ -507,8 +512,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'Incorrect password.'], 422);
         }
 
-        $secret     = MfaSecret::where('user_id', $user->id)->first();
-        $google2fa  = new Google2FA();
+        $secret = MfaSecret::where('user_id', $user->id)->first();
+        $google2fa = new Google2FA();
 
         if (!$secret || !$google2fa->verifyKey($secret->secret, $request->totp_code)) {
             return response()->json(['message' => 'Invalid authenticator code.'], 422);
@@ -518,8 +523,8 @@ class AuthController extends Controller
         $user->update(['mfa_enabled' => false]);
 
         AuditLog::record('mfa_disabled', [
-            'user_id'    => $user->id,
-            'email'      => $user->email,
+            'user_id' => $user->id,
+            'email' => $user->email,
             'ip_address' => $request->ip(),
         ]);
 
@@ -538,7 +543,8 @@ class AuthController extends Controller
             'message' => 'If that email exists, a reset link has been sent.'
         ]);
 
-        if (!$user) return $genericResponse;
+        if (!$user)
+            return $genericResponse;
 
         // Rate limit: 3 per hour per email
         $cacheKey = 'pwd_reset_' . md5($user->email);
@@ -549,22 +555,22 @@ class AuthController extends Controller
         Cache::put($cacheKey, Cache::get($cacheKey, 0) + 1, now()->addHour());
 
         // Generate token
-        $token      = Str::random(64);
-        $resetUrl   = config('app.frontend_url', 'http://localhost:5173')
-                      . '/admin/reset-password?token=' . $token
-                      . '&email=' . urldecode($user->email);
+        $token = Str::random(64);
+        $resetUrl = config('app.frontend_url', 'http://localhost:5173')
+            . '/admin/reset-password?token=' . $token
+            . '&email=' . urldecode($user->email);
 
         \DB::table('admin_password_resets')->insert([
-            'email'      => $user->email,
-            'token'      => Hash::make($token),
+            'email' => $user->email,
+            'token' => Hash::make($token),
             'created_at' => now(),
         ]);
 
         $this->brevo->sendPasswordReset($user->email, $user->name, $resetUrl);
 
         AuditLog::record('password_reset_requested', [
-            'user_id'    => $user->id,
-            'email'      => $user->email,
+            'user_id' => $user->id,
+            'email' => $user->email,
             'ip_address' => $request->ip(),
         ]);
 
@@ -575,9 +581,9 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'email'     => 'required|email',
-            'token'     => 'required|string',
-            'password'  => [
+            'email' => 'required|email',
+            'token' => 'required|string',
+            'password' => [
                 'required',
                 'string',
                 'min:12',
@@ -589,9 +595,9 @@ class AuthController extends Controller
         ]);
 
         $reset = \DB::table('admin_password_resets')
-                ->where('email', $request->email)
-                ->where('created_at', '>=', now()->subHour())
-                ->first();
+            ->where('email', $request->email)
+            ->where('created_at', '>=', now()->subHour())
+            ->first();
 
         if (!$reset || !Hash::check($request->token, $reset->token)) {
             return response()->json([
@@ -612,10 +618,10 @@ class AuthController extends Controller
         }
 
         $user->update([
-            'password'            => Hash::make($request->password),
+            'password' => Hash::make($request->password),
             'password_changed_at' => now(),
-            'failed_attempts'     => 0,
-            'locked_until'        => null,
+            'failed_attempts' => 0,
+            'locked_until' => null,
         ]);
 
         // Revoke all tokens. Force re-login
@@ -629,8 +635,8 @@ class AuthController extends Controller
         $this->brevo->sendPasswordChanged($user->email, $user->name, $request->ip());
 
         AuditLog::record('password_reset_completed', [
-            'user_id'    => $user->id,
-            'email'      => $user->email,
+            'user_id' => $user->id,
+            'email' => $user->email,
             'ip_address' => $request->ip(),
         ]);
 
@@ -642,7 +648,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'current_password' => 'required|string',
-            'password'         => [
+            'password' => [
                 'required',
                 'string',
                 'min:12',
@@ -651,7 +657,7 @@ class AuthController extends Controller
                 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/',
             ],
         ], [
-            'password.regex'    => 'Password must contain uppercase, lowercase, number, and special character.',
+            'password.regex' => 'Password must contain uppercase, lowercase, number, and special character.',
             'password.different' => 'New password must be different from current password.',
         ]);
 
@@ -662,7 +668,7 @@ class AuthController extends Controller
         }
 
         $user->update([
-            'password'            => Hash::make($request->password),
+            'password' => Hash::make($request->password),
             'password_changed_at' => now(),
         ]);
 
@@ -672,40 +678,22 @@ class AuthController extends Controller
         $this->brevo->sendPasswordChanged($user->email, $user->name, $request->ip());
 
         AuditLog::record('password_changed', [
-            'user_id'   => $user->id,
-            'email'     => $user->email,
+            'user_id' => $user->id,
+            'email' => $user->email,
             'ip_address' => $request->ip(),
         ]);
 
         return response()->json(['message' => 'Password changed successfully.']);
     }
 
-    // Inactivity check
+    // Inactivity check - middleware already enforces timeout before this runs
+    // This endpoint simply confirms the session is still valid
     public function checkActivity(Request $request)
     {
-        $user            = $request->user();
-        $inactivityLimit = 30; // minutes
-
-        if ($user->last_activity_at &&
-            $user->last_activity_at->lt(now()->subMinutes($inactivityLimit))) {
-
-            // Auto logout
-            $user->tokens()->delete();
-
-            AuditLog::record('auto_logout_inactivity', [
-                'user_id'    => $user->id,
-                'email'      => $user->email,
-                'ip_address' => $request->ip(),
-            ]);
-
-            return response()->json([
-                'message'         => 'Session expired due to inactivity.',
-                'session_expired' => true,
-            ], 401);
-
-            }
-            $user->update(['last_activity_at' => now()]);
-            return response()->json(['active' => true]);
+        return response()->json([
+            'active' => true,
+            'user_name' => $request->user()->name,
+        ]);
     }
 
     // Private helpers
@@ -717,12 +705,16 @@ class AuthController extends Controller
         $user->clearFailedAttempts();
 
         $user->update([
-            'last_login_at'     => now(),
-            'last_login_ip'     => $ip,
-            'last_activity_at'  => now(),
+            'last_login_at' => now(),
+            'last_login_ip' => $ip,
         ]);
 
-        $token = $user->createToken('admin-token')->plainTextToken;
+        $newToken = $user->createToken('admin-token');
+        $newToken->accessToken
+            ->forceFill(['last_activity_at' => now()])
+            ->save();
+
+        $token = $newToken->plainTextToken;
 
         $this->recordAttempt($user->email, $ip, $userAgent, true, null);
 
@@ -736,20 +728,20 @@ class AuthController extends Controller
         );
 
         AuditLog::record('login_success', [
-            'user_id'    => $user->id,
-            'email'      => $user->email,
+            'user_id' => $user->id,
+            'email' => $user->email,
             'ip_address' => $ip,
             'user_agent' => $userAgent,
         ]);
 
         return response()->json([
             'message' => 'Login successful.',
-            'token'   => $token,
-            'user'    => [
-                'id'          => $user->id,
-                'name'        => $user->name,
-                'email'       => $user->email,
-                'role'        => $user->role,
+            'token' => $token,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
                 'mfa_enabled' => $user->mfa_enabled,
             ],
         ]);
@@ -780,12 +772,12 @@ class AuthController extends Controller
         ?string $reason
     ): void {
         LoginAttempt::create([
-            'email'          => $email,
-            'ip_address'     => $ip,
-            'user_agent'     => substr($userAgent, 0, 255),
-            'successful'     => $successful,
+            'email' => $email,
+            'ip_address' => $ip,
+            'user_agent' => substr($userAgent, 0, 255),
+            'successful' => $successful,
             'failure_reason' => $reason,
-            'attempted_at'   => now(),
+            'attempted_at' => now(),
         ]);
     }
 }
