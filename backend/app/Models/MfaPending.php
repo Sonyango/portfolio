@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class MfaPending extends Model
 {
+    protected $table = 'mfa_pending';
     protected $fillable = [
         'user_id',
         'token',

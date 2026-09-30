@@ -21,17 +21,22 @@ export const useAuthStore = defineStore('auth', () => {
           success:      false,
           mfaRequired:  true,
           mfaToken:     data.mfa_token,
+          method:       data.method,
           message:      data.message,
+          emailHint:    data.email_hint,
         }
       }
 
-      // Save token to localStorage
-      localStorage.setItem('admin_token', data.token)
-      user.value = data.user
-      return { success: true }
+      // Fallback: if somehow token is returned (shouldn't happen)
+      if (data.token) {
+        localStorage.setItem('admin_token', data.token)
+        user.value = data.user
+        return { success: true }
+      }
+
+      return { success: false, message: 'Unexpected response.' }
 
     } catch (err) {
-      //const message =  error.response?.data?.message || 'Login failed.'
       const response = err.response
       return {
         success: false,
@@ -47,12 +52,12 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // MFA Verify
-  async function verifyMfa(mfaToken, totpCode) {
+  async function verifyMfa(mfaToken, code) {
     loading.value = true
     try {
       const { data } = await api.post('/admin/mfa/verify', {
         mfa_token: mfaToken,
-        totp_code: totpCode,
+        code,
       })
 
       localStorage.setItem('admin_token', data.token)
@@ -60,12 +65,31 @@ export const useAuthStore = defineStore('auth', () => {
       return { success: true }
 
     } catch (err) {
+      const response = err.response
       return {
         success: false,
-        message: err.response?.data?.message || 'Verification failed.',
+        message: response?.data?.message || 'Verification failed.',
+        attemptsLeft: response?.data?.attempts_left,
+        expired: response?.data?.expired || false,
+        status:  response?.status,
       }
     } finally {
       loading.value = false
+    }
+  }
+
+  // Resend email code
+  async function resendEmailCode(mfaToken) {
+    try {
+      const { data } = await api.post('/admin/mfa/resend', {
+        mfa_token: mfaToken,
+      })
+      return { success: true, message: data.message }
+    } catch (err) {
+      return {
+        success: false,
+        message: err.response?.data?.message || 'Could not resend code.',
+      }
     }
   }
 
@@ -78,6 +102,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Fetch current user
   async function fetchMe() {
     const token = localStorage.getItem('admin_token')
     if (!token) return
@@ -114,7 +139,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user, loading,
     isAuthenticated, isAdmin,
-    login, verifyMfa, logout,
-    fetchMe, pingActivity,
+    login, verifyMfa, resendEmailCode,
+    logout, fetchMe, pingActivity,
    }
 })
