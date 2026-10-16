@@ -58,6 +58,9 @@ Route::prefix('admin')->group(function () {
     // Public auth routes
     Route::middleware('throttle:10,1')->group(function () {
         Route::post('/login', [AuthController::class, 'login']);
+        Route::get('/mfa/method-info', [AuthController::class, 'getMfaMethodInfo']);
+        Route::post('/mfa/switch-method', [AuthController::class, 'switchMfaMethod']);
+        Route::post('/mfa/resend', [AuthController::class, 'resendEmailCode']);
         Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
         Route::post('/reset-password', [AuthController::class, 'resetPassword']);
         Route::post('/mfa/verify', [AuthController::class, 'verifyMfa']);
@@ -68,13 +71,14 @@ Route::prefix('admin')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/change-password', [AuthController::class, 'changePassword']);
-        Route::post('/activity-check', [AuthController::class, 'checkActivity'])
-            ->name('admin.activity-check');
+        Route::get('/activity-check', [AuthController::class, 'checkActivity']);
+        Route::put('/profile', [AuthController::class, 'updateProfile']);
 
         // MFA management
         Route::get('/mfa/setup', [AuthController::class, 'setupMfa']);
         Route::post('/mfa/enable', [AuthController::class, 'enableMfa']);
         Route::post('/mfa/disable', [AuthController::class, 'disableMfa']);
+        Route::put('/mfa/preference', [AuthController::class, 'setMfaPreference']);
     });
 });
 

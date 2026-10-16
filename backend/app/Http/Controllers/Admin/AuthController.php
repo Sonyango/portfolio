@@ -12,6 +12,7 @@ use App\Services\BrevoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -19,25 +20,7 @@ use PragmaRX\Google2FA\Google2FA;
 
 class AuthController extends Controller
 {
-    public function __construct(private BrevoService $brevo)
-    {
-    }
-
-    private function maskEmail(string $email): string
-    {
-        $separator = mb_strrpos($email, '@');
-
-        if ($separator === false || $separator === 0 || $separator === mb_strlen($email) - 1) {
-            return '***';
-        }
-
-        $localPart = mb_substr($email, 0, $separator);
-        $domain = mb_substr($email, $separator);
-        $visiblePrefix = mb_substr($localPart, 0, 1);
-        $maskedLength = max(3, mb_strlen($localPart) - 1);
-
-        return $visiblePrefix . str_repeat('*', $maskedLength) . $domain;
-    }
+    public function __construct(private BrevoService $brevo) {}
 
     // Step 1: Password check
     // Always ends with an MFA challenge. Never issues token directly.
@@ -138,66 +121,136 @@ class AuthController extends Controller
         // If password is correct.
         RateLimiter::clear($ipKey);
 
-        // Determine MFA method
         // Delete any old pending challenges for this user
         MfaPending::where('user_id', $user->id)->delete();
 
-        $hasTotpEnrolled = MfaSecret::where('user_id', $user->id)
-            ->where('enabled', true)
-            ->exists();
+        // Determine method from user preference (with fallback to email if not set)
+        $method = $user->effectiveMfaMethod();
+
+        return $this->createMfaChallenge($user, $method, $ip, $userAgent);
+    }
+
+    // Get current MFA method info for the challenge screen
+    public function getMfaMethodInfo(Request $request)
+    {
+        $request->validate(['mfa_token' => 'required|string|size:64']);
+
+        $pending = MfaPending::where('token', $request->mfa_token)
+                            ->with('user.mfaSecret')
+                            ->first();
+
+        if (!$pending || $pending->isExpired()) {
+            return response()->json([
+                'message' => 'Session expired. Please login again.',
+                'expired' => true
+            ], 422);
+        }
+
+        $user = $pending->user;
+        $hasTotpEnrolled = $user->hasTotpEnrolled();
+        $availableMethods = ['email'];
 
         if ($hasTotpEnrolled) {
-            // TOTP path
-            $pending = MfaPending::create([
-                'user_id' => $user->id,
-                'token' => Str::random(64),
-                'method' => 'totp',
-                'expires_at' => now()->addMinutes(10),
-            ]);
+            $availableMethods[] = 'totp';
+        }
 
-            AuditLog::record('login_mfa_totp_challenge', [
-                'user_id' => $user->id,
-                'email' => $email,
-                'ip_address' => $ip,
-            ]);
+        return response()->json([
+            'current_method' => $pending->method,
+            'preferred_method' => $user->preferred_mfa_method,
+            'available_methods' => $availableMethods,
+            'totp_enrolled' => $hasTotpEnrolled,
+            'email_hint' => $this->maskEmail($user->email),
+            'expires_at' => $pending->expires_at->toIso8601String(),
+        ]);
+    }
 
+    // Switch MFA method for current pending challenge
+    public function switchMfaMethod(Request $request)
+    {
+        $request->validate([
+            'mfa_token' => 'required|string|size:64',
+            'new_method' => 'required|in:email,totp',
+        ]);
+
+        $pending = MfaPending::where('token', $request->mfa_token)
+                             ->with('user')
+                             ->first();
+
+        if (!$pending || $pending->isExpired()) {
             return response()->json([
-                'mfa_required' => true,
-                'mfa_token' => $pending->token,
-                'method' => 'totp',
-                'message' => 'Enter the 6-digit code from your authenticator app.',
+                'message' => 'Session expired. Please login again.',
+                'expired' => true,
+            ], 422);
+        }
+
+        $user = $pending->user;
+        $newMethod = $request->new_method;
+
+        // Guard: if switching to TOTP, must be enrolled
+        if ($newMethod === 'totp' && !$user->hasTotpEnrolled()) {
+            return response()->json([
+                'message' => 'Authenticator app is not enrolled. Please use email verification.',
+            ], 422);
+        }
+
+        // If already on this method, just return current state
+        if ($pending->method === $newMethod) {
+            return response()->json([
+                'message' => 'Already using '. $newMethod . ' verification.',
+                'method'  => $newMethod,
+                'email_hint' => $newMethod === 'email'
+                    ? $this->maskEmail($user->email)
+                    : null,
             ]);
-        } else {
-            // Email OTP path
-            // Generate a 6-digit code
+        }
+
+        // Update pending challenge method
+        if ($newMethod === 'email') {
+            // Generate and send new email code
             $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
             $codeHash = Hash::make($code);
 
-            $pending = MfaPending::create([
-                'user_id' => $user->id,
-                'token' => Str::random(64),
+            $pending->update([
                 'method' => 'email',
                 'email_code_hash' => $codeHash,
+                'attempts' => 0,
                 'expires_at' => now()->addMinutes(10),
             ]);
 
-            // Send code via brevo
-            $sent = $this->brevo->sendMfaCode($user->email, $user->name, $code);
+            $this->brevo->sendMfaCode($user->email, $user->name, $code);
 
-            AuditLog::record('login_mfa_email_challenge', [
+            AuditLog::record('mfa_method_switched', [
                 'user_id' => $user->id,
-                'email' => $email,
-                'ip_address' => $ip,
-                'email_sent' => $sent,
+                'email' => $user->email,
+                'ip_address' => $request->ip(),
+                'metadata' => ['from' => 'totp', 'to' => 'email'],
             ]);
 
             return response()->json([
-                'mfa_required' => true,
-                'mfa_token' => $pending->token,
-                'method' => 'email',
-                'message' => 'A 6-digit verification code has been sent to '
-                    . $this->maskEmail($user->email),
-                'email_hint' => $this->maskEmail($user->email),
+                'message' => 'Switched to email. Code has been sent to '
+                             . $this->maskEmail($user->email),
+            'method' => 'email',
+            'email_hint' => $this->maskEmail($user->email),
+            ]);
+        } else {
+            // Switch to TOTP
+            $pending->update([
+                'method' => 'totp',
+                'email_code_hash' => null,
+                'attempts' => 0,
+                'expires_at' => now()->addMinutes(10),
+            ]);
+
+            AuditLog::record('mfa_method_switched', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'ip_address' => $request->ip(),
+                'metadata' => ['from' => 'email', 'to' => 'totp'],
+            ]);
+
+            return response()->json([
+                'message' => 'Switched to authenticator app.',
+                'method' => 'totp',
             ]);
         }
     }
@@ -206,46 +259,6 @@ class AuthController extends Controller
     // Only issues an access token after successful second factor.
     public function verifyMfa(Request $request)
     {
-        // $request->validate([
-        //     'mfa_token' => 'required|string|size:64',
-        //     'totp_code' => 'required|string|size:6',
-        // ]);
-
-        // $pending = MfaPending::where('token', $request->mfa_token)
-        //                         ->with('user')
-        //                         ->first();
-
-        // if (!$pending || $pending->isExpired()) {
-        //     return response()->json([
-        //         'message' => 'Verification session expired. Please login again.'
-        //     ], 422);
-        // }
-
-        // $user   = $pending->user;
-        // $secret = MfaSecret::where('user_id', $user->id)
-        //                     ->where('enabled', true)
-        //                     ->first();
-        // if (!$secret) {
-        //     return response()->json([
-        //         'message' => 'MFA not configured.'
-        //     ], 422);
-        // }
-
-        // $google2fa = new Google2FA();
-        // $valid     = $google2fa->verifyKey($secret->secret, $request->totp_code);
-
-        // if (!$valid) {
-        //     AuditLog::record('mfa_failed', [
-        //         'user_id'    => $user->id,
-        //         'email'      => $user->email,
-        //         'ip_address' => $request->ip(),
-        //     ]);
-        //     return response()->json(['message' => 'Invalid verification code.'], 422);
-        // }
-
-        // $pending->delete();
-
-        // return $this->completeLogin($user, $request->ip(), $request->userAgent());
 
         $request->validate([
             'mfa_token' => 'required|string|size:64',
@@ -273,7 +286,7 @@ class AuthController extends Controller
 
         if ($pending->hasExceededAttempts()) {
             $pending->delete();
-            AuditLog::record('mfa_max_attempts_exceded', [
+            AuditLog::record('mfa_max_attempts_exceeded', [
                 'user_id' => $pending->user_id,
                 'ip_address' => $request->ip(),
             ]);
@@ -297,6 +310,7 @@ class AuthController extends Controller
                 $pending->delete();
                 return response()->json([
                     'message' => 'Authenticator not configured. Please login again.',
+                    'expired' => true,
                 ], 422);
             }
 
@@ -306,6 +320,12 @@ class AuthController extends Controller
                 $request->code,
                 2 // allow 2 time-steps window (±1 minute)
             );
+
+            // Also check recovery codes
+            if (!$verified) {
+                $verified = $secret->verifyRecoveryCode($request->code);
+            }
+
         } elseif ($pending->method === 'email') {
             // Constant-time comparison via hash check
             $verified = Hash::check($request->code, $pending->email_code_hash);
@@ -392,11 +412,6 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // $request->user()->currentAccesstoken()->delete();
-        // return response()->json([
-        //     'message' => 'Logged out successfully.'
-        // ]);
-
         $user = $request->user();
 
         if ($user) {
@@ -415,7 +430,8 @@ class AuthController extends Controller
     // Get current user
     public function me(Request $request)
     {
-        $user = $request->user();
+        $user = $request->user()->load('mfaSecret');
+        $user->update(['last_activity_at' => now()]);
 
         return response()->json([
             'user' => [
@@ -424,86 +440,36 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'mfa_enabled' => $user->mfa_enabled,
+                'preferred_mfa_method' => $user->preferred_mfa_method,
+                'totp_enrolled' => $user->hasTotpEnrolled(),
                 'last_login' => $user->last_login_at?->diffForHumans(),
+                'last_login_ip' => $user->last_login_ip,
+                'password_changed_at' => $user->password_changed_at?->format('d M Y H:i:s T'),
             ]
         ]);
     }
 
-    // MFA Setup
-    public function setupMfa(Request $request)
+    // Profile update
+    public function updateProfile(Request $request)
     {
-        $user = $request->user();
-        $google2fa = new Google2FA();
-        $secret = $google2fa->generateSecretKey();
+        $data = $request->validate([
+            'name' => 'sometimes|string|max:100',
+        ]);
 
-        // Store secret (not yet enabled)
-        MfaSecret::updateOrCreate(
-            ['user_id' => $user->id],
-            ['secret' => $secret, 'enabled' => false]
-        );
-
-        $qrCodeUrl = $google2fa->getQRCodeUrl(
-            config('app.name'),
-            $user->email,
-            $secret
-        );
+        $request->user()->update($data);
 
         return response()->json([
-            'secret' => $secret,
-            'qr_code_url' => $qrCodeUrl,
+            'message' => 'Profile updated successfully.',
+            'user' => ['name' => $request->user()->fresh()->name],
         ]);
     }
 
-    // MFA Enable
-    public function enableMfa(Request $request)
-    {
-        $request->validate(['totp_code' => 'required|string|size:6']);
-
-        $user = $request->user();
-        $secret = MfaSecret::where('user_id', $user->id)->first();
-
-        if (!$secret) {
-            return response()->json(['message' => 'Setup MFA first.'], 422);
-        }
-
-        $google2fa = new Google2FA();
-        $valid = $google2fa->verifyKey($secret->secret, $request->totp_code);
-
-        if (!$valid) {
-            return response()->json(['message' => 'Invalid code. Try again.'], 422);
-        }
-
-        // Generate recovery codes
-        $recoveryCodes = collect(range(1, 8))
-            ->map(fn() => strtoupper(Str::random(4) . '-' . Str::random(4)))
-            ->toArray();
-
-        $secret->update([
-            'enabled' => true,
-            'recovery_codes' => $recoveryCodes,
-            'enabled_at' => now(),
-        ]);
-
-        $user->update(['mfa_enabled' => true]);
-
-        AuditLog::record('mfa_enabled', [
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'ip_address' => $request->ip(),
-        ]);
-
-        return response()->json([
-            'message' => 'Authenticator app enrolled. Future logins will use TOTP',
-            'recovery_codes' => $recoveryCodes,
-        ]);
-    }
-
-    // MFA Disable
-    public function disableMfa(Request $request)
+    // MFA Preference
+    public function setMfaPreference(Request $request)
     {
         $request->validate([
+            'method' => 'required|in:email,totp',
             'password' => 'required|string',
-            'totp_code' => 'required|string|size:6',
         ]);
 
         $user = $request->user();
@@ -512,15 +478,168 @@ class AuthController extends Controller
             return response()->json(['message' => 'Incorrect password.'], 422);
         }
 
-        $secret = MfaSecret::where('user_id', $user->id)->first();
-        $google2fa = new Google2FA();
+        $method = $request->input('method');
 
-        if (!$secret || !$google2fa->verifyKey($secret->secret, $request->totp_code)) {
+        if ($method === 'totp' && !$user->hasTotpEnrolled()) {
+            return response()->json([
+                'message' => 'You must enroll an authenticator app before setting it as your preferred method.'
+            ], 422);
+        }
+
+        $user->update(['preferred_mfa_method' => $method]);
+
+        AuditLog::record('mfa_preference_changed', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip_address' => $request->ip(),
+            'metadata' => ['new_method' => $method],
+        ]);
+
+        return response()->json([
+            'message' => 'MFA preference updated.',
+            'preferred_method' => $method,
+        ]);
+    }
+
+    // TOTP Setup - Step 1: Generate secret Plus QR code
+    // Does not replace active secret until confirmed
+    public function setupMfa(Request $request)
+    {
+        $user = $request->user();
+        $google2fa = new Google2FA();
+        $newSecret = $google2fa->generateSecretKey(32);
+
+        // Get or create secret record without touching the active secret.
+        $mfaRecord = MfaSecret::firstOrCreate(
+            ['user_id' => $user->id],
+            ['secret' => '', 'enabled' => false]
+        );
+
+        // Store new setup in pending secret field. Do not overwrite active secret until new one is confirmed.
+        $mfaRecord->update([
+            'pending_secret' => $newSecret,
+            'setup_started_at' => now(),
+        ]);
+
+        $qrCodeUrl = $google2fa->getQRCodeUrl(
+            config('app.name') . ' Admin',
+            $user->email,
+            $newSecret
+        );
+
+        AuditLog::record('mfa_setup_initiated', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip_address' => $request->ip(),
+        ]);
+
+        return response()->json([
+            'secret' => $newSecret,
+            'qr_code_url' => $qrCodeUrl,
+            'totp_enrolled' => $mfaRecord->enabled,
+            'setup_started_at' => $mfaRecord->setup_started_at?->toIso8601String(),
+        ]);
+    }
+
+    // TOTP Setup - step 2: verify code and activate
+    public function enableMfa(Request $request)
+    {
+        $request->validate([
+            'totp_code' => 'required|string|size:6',
+            'password' => 'required|string',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Incorrect password.'], 422);
+        }
+
+        $mfaRecord = MfaSecret::where('user_id', $user->id)->first();
+
+        if (!$mfaRecord || !$mfaRecord->hasPendingSetup()) {
+            return response()->json([
+                'message' => 'No pending authentcator setup found. Please start the setup process again.',
+            ], 422);
+        }
+
+        $google2fa = new Google2FA();
+        if (!$google2fa->verifyKey($mfaRecord->pending_secret, $request->totp_code)) {
+            return response()->json([
+                'message' => 'Invalid code. Ensure your authenticator app is synced and try again.',
+            ], 422);
+        }
+
+        // Code verified. Promote pending secret to active secret
+        $recoveryCodes = $this->generateRecoveryCodes();
+        $recoveryCodesHashed = MfaSecret::hashRecoveryCodes($recoveryCodes);
+
+        $mfaRecord->update([
+            'secret' => $mfaRecord->pending_secret,
+            'pending_secret' => null,
+            'setup_started_at' => null,
+            'enabled' => true,
+            'enabled_at' => now(),
+            'recovery_codes' => $recoveryCodesHashed,
+            'recovery_codes_hashed' => $recoveryCodesHashed,
+
+        ]);
+
+        $user->update([
+            'mfa_enabled' => true,
+            'preferred_mfa_method' => 'totp',
+        ]);
+
+        AuditLog::record('mfa_enabled', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip_address' => $request->ip(),
+        ]);
+
+        return response()->json([
+            'message' => 'Authenticator app enabled. TOTP is now your default MFA method.',
+            'recovery_codes' => $recoveryCodes,
+        ]);
+    }
+
+    // TOTP Disable / Remove
+    public function disableMfa(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string',
+            'totp_code' => 'required|string|min:6|max:8',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Incorrect password.'], 422);
+        }
+
+        $mfaRecord = MfaSecret::where('user_id', $user->id)
+                              ->where('enabled', true)
+                              ->first();
+
+        if (!$mfaRecord) {
+            return response()->json(['message' => 'No active authenticator app found.'], 422);
+        }
+
+        $google2fa = new Google2FA();
+        $validTotp = $google2fa->verifyKey($mfaRecord->secret, $request->totp_code, 2);
+        $validRecovery = !$validTotp
+            ? $mfaRecord->verifyRecoveryCode($request->totp_code)
+            : false;
+
+        if (!$validTotp && !$validRecovery) {
             return response()->json(['message' => 'Invalid authenticator code.'], 422);
         }
 
-        $secret->delete();
-        $user->update(['mfa_enabled' => false]);
+        $mfaRecord->delete();
+
+        $user->update([
+            'mfa_enabled' => false,
+            'preferred_mfa_method' => 'email',
+        ]);
 
         AuditLog::record('mfa_disabled', [
             'user_id' => $user->id,
@@ -558,7 +677,7 @@ class AuthController extends Controller
         $token = Str::random(64);
         $resetUrl = config('app.frontend_url', 'http://localhost:5173')
             . '/admin/reset-password?token=' . $token
-            . '&email=' . urldecode($user->email);
+            . '&email=' . urlencode($user->email);
 
         \DB::table('admin_password_resets')->insert([
             'email' => $user->email,
@@ -594,7 +713,7 @@ class AuthController extends Controller
             'password.regex' => 'Password must contain uppercase, lowercase, numbr, and special character.',
         ]);
 
-        $reset = \DB::table('admin_password_resets')
+        $reset = DB::table('admin_password_resets')
             ->where('email', $request->email)
             ->where('created_at', '>=', now()->subHour())
             ->first();
@@ -628,7 +747,7 @@ class AuthController extends Controller
         $user->tokens()->delete();
 
         // Delete reset token
-        \DB::table('admin_password_resets')
+        DB::table('admin_password_resets')
             ->where('email', $request->email)
             ->delete();
 
@@ -697,6 +816,74 @@ class AuthController extends Controller
     }
 
     // Private helpers
+    private function createMfaChallenge(
+        User $user,
+        string $method,
+        string $ip,
+        string $userAgent
+    ){
+        MfaPending::where('user_id', $user->id)->delete();
+
+        if ($method === 'totp') {
+            $pending = MfaPending::create([
+                'user_id' => $user->id,
+                'token' => Str::random(64),
+                'method' => 'totp',
+                'expires_at' => now()->addMinutes(10),
+            ]);
+
+            AuditLog::record('login_mfa_totp_challenge', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'ip_address' => $ip,
+                'user_agent' => $userAgent,
+            ]);
+
+            return response()->json([
+                'mfa_required' => true,
+                'mfa_token' => $pending->token,
+                'method' => 'totp',
+                'message' => 'Please enter the code from your authenticator app.',
+            ]);
+        } else {
+            $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $codeHash = Hash::make($code);
+
+            $pending = MfaPending::create([
+                'user_id' => $user->id,
+                'token' => Str::random(64),
+                'method' => 'email',
+                'email_code_hash' => $codeHash,
+                'expires_at' => now()->addMinutes(10),
+            ]);
+
+            $sent = $this->brevo->sendMfaCode($user->email, $user->name, $code);
+
+            AuditLog::record('login_mfa_email_challenge', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'ip_address' => $ip,
+                'email_sent' => $sent,
+                'user_agent' => $userAgent,
+            ]);
+
+            return response()->json([
+                'mfa_required' => true,
+                'mfa_token' => $pending->token,
+                'method' => 'email',
+                'message' => 'A code has been sent to ' . $this->maskEmail($user->email),
+                'email_hint' => $this->maskEmail($user->email),
+            ]);
+        }
+    }
+    private function generateRecoveryCodes(): array
+    {
+        return array_map(
+            static fn (): string => strtoupper(Str::random(10)),
+            range(1, 10)
+        );
+    }
+
     private function completeLogin(
         User $user,
         string $ip,
@@ -707,14 +894,10 @@ class AuthController extends Controller
         $user->update([
             'last_login_at' => now(),
             'last_login_ip' => $ip,
+            'last_activity_at' => now(),
         ]);
 
-        $newToken = $user->createToken('admin-token');
-        $newToken->accessToken
-            ->forceFill(['last_activity_at' => now()])
-            ->save();
-
-        $token = $newToken->plainTextToken;
+        $token = $user->createToken('admin-token')->plainTextToken;
 
         $this->recordAttempt($user->email, $ip, $userAgent, true, null);
 
@@ -743,6 +926,8 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'mfa_enabled' => $user->mfa_enabled,
+                'preferred_mfa_method' => $user->preferred_mfa_method,
+                'totp_enrolled' => $user->hasTotpEnrolled(),
             ],
         ]);
     }
@@ -779,5 +964,21 @@ class AuthController extends Controller
             'failure_reason' => $reason,
             'attempted_at' => now(),
         ]);
+    }
+
+    private function maskEmail(string $email): string
+    {
+        $separator = mb_strrpos($email, '@');
+
+        if ($separator === false || $separator === 0 || $separator === mb_strlen($email) - 1) {
+            return '***';
+        }
+
+        $localPart = mb_substr($email, 0, $separator);
+        $domain = mb_substr($email, $separator);
+        $visiblePrefix = mb_substr($localPart, 0, 1);
+        $maskedLength = max(3, mb_strlen($localPart) - 1);
+
+        return $visiblePrefix . str_repeat('*', $maskedLength) . $domain;
     }
 }

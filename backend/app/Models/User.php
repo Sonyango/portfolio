@@ -1,9 +1,6 @@
 <?php
 
 namespace App\Models;
-
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -20,7 +17,7 @@ class User extends Authenticatable
         'locked_until', 'failed_attempts',
         'last_login_at', 'last_login_ip',
         'password_changed_at', 'mfa_enabled',
-        'last_activity_at',
+        'preferred_mfa_method',    'last_activity_at',
     ];
 
 
@@ -28,15 +25,6 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
-
-
-    // protected function casts(): array
-    // {
-    //     return [
-    //         'email_verified_at' => 'datetime',
-    //         'password' => 'hashed',
-    //     ];
-    // }
 
     protected $casts = [
         'email_verified_at' => 'datetime',
@@ -51,6 +39,23 @@ class User extends Authenticatable
     public function mfaSecret()
     {
         return $this->hasOne(MfaSecret::class);
+    }
+
+    public function hasTotpEnrolled(): bool
+    {
+        return $this->mfaSecret()
+                    ->where('enabled', true)
+                    ->exists();
+    }
+
+    // Effective MFA method for login
+    // Falls back to email if TOTP prefferred but not enrolled
+    public function effectiveMfaMethod(): string
+    {
+        if ($this->preffered_mfa_method === 'totp' && $this->hasTotpEnrolled()) {
+            return 'totp';
+        }
+        return 'email';
     }
 
     public function isLocked(): bool
@@ -74,7 +79,6 @@ class User extends Authenticatable
             $attempts >= 10 => now()->addHours(24),
             $attempts >= 7 => now()->addMinutes(30),
             $attempts >= 5 => now()->addMinutes(15),
-            //$attempts >= 3 => now()->addMinutes(5),
             default        => null,
         };
 

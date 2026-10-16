@@ -28,13 +28,6 @@ api.interceptors.response.use(
   res => res,
   err => {
 
-    // const isLoginRequest = err.config?.url?.includes('/admin/login')
-
-    // if (err.response?.status === 401 && !isLoginRequest) {
-    //   localStorage.removeItem('admin_token')
-    //   window.location.href = '/admin/login'
-    // }
-
     if (err.response?.status === 401) {
       const data        = err.response.data ?? {}
       const sessionExpired = data.session_expired === true

@@ -56,6 +56,37 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function getMfaMethodInfo(mfaToken) {
+    try {
+      const { data } = await api.get('/admin/mfa/method-info', {
+        params: { mfa_token: mfaToken }
+      })
+      return { success: true, data }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to get method info.',
+        expired: error.response?.data?.expired || false,
+      }
+    }
+  }
+
+  async function switchMfaMethod(mfaToken, newMethod) {
+    try {
+      const { data } = await api.post('/admin/mfa/switch-method', {
+        mfa_token: mfaToken,
+        new_method: newMethod,
+      })
+      return { success: true, data }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Switch failed.',
+        expired: error.response?.data?.expired || false,
+      }
+    }
+  }
+
   // MFA Verify
   async function verifyMfa(mfaToken, code) {
     loading.value = true
@@ -93,6 +124,7 @@ export const useAuthStore = defineStore('auth', () => {
       return {
         success: false,
         message: err.response?.data?.message || 'Could not resend code.',
+        expired: err.response?.data?.expired || false,
       }
     }
   }
@@ -102,7 +134,7 @@ export const useAuthStore = defineStore('auth', () => {
       await api.post('/admin/logout')
     } finally {
       localStorage.removeItem('admin_token')
-      localStorage.removeItem('admin_last_activity_at')
+      //localStorage.removeItem('admin_last_activity_at')
       user.value = null
     }
   }
@@ -117,15 +149,27 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = data.user
     } catch (error) {
       localStorage.removeItem('admin_token')
-      localStorage.removeItem('admin_last_activity_at')
+      //localStorage.removeItem('admin_last_activity_at')
       user.value = null
     }
   }
 
+  async function pingActivity() {
+    if (!user.value) return
+    try {
+      await api.get('/admin/activity-check')
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('admin_token')
+        user.value = null
+        window.location.href = '/admin/login?reason=inactivity'
+      }
+    }
+  }
+
   return {
-    user, loading,
-    isAuthenticated, isAdmin,
-    login, verifyMfa, resendEmailCode,
-    logout, fetchMe,
+    user, loading, isAuthenticated, isAdmin,
+    login, getMfaMethodInfo, switchMfaMethod,
+    verifyMfa, resendEmailCode, logout, fetchMe, pingActivity,
    }
 })
