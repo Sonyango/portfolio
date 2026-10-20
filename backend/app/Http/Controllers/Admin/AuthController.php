@@ -557,7 +557,7 @@ class AuthController extends Controller
 
         $mfaRecord = MfaSecret::where('user_id', $user->id)->first();
 
-        if (!$mfaRecord || !$mfaRecord->hasPendingSetup()) {
+        if (!$mfaRecord || !$mfaRecord->hasPendingSecret()) {
             return response()->json([
                 'message' => 'No pending authentcator setup found. Please start the setup process again.',
             ], 422);

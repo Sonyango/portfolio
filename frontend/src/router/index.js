@@ -23,6 +23,7 @@ const AdminServices = () => import('@/views/admin/AdminServices.vue')
 const AdminSettings = () => import('@/views/admin/AdminSettings.vue')
 const AdminMessages = () => import('@/views/admin/AdminMessages.vue')
 const AdminMedia = () => import('@/views/admin/AdminMedia.vue')
+const AdminProfile = () => import('@/views/admin/AdminProfile.vue')
 
 const routes = [
   // **** Public routes ******
@@ -39,6 +40,7 @@ const routes = [
 
   { path: '/admin/login', name: 'admin.login',  component:  AdminLogin, meta: { guestOnly: true }},
   { path: '/admin', name: 'admin.dashboard',  component:  AdminDashboard, meta: { requiresAuth: true } },
+  { path: '/admin/profile', name: 'admin.profile', component: AdminProfile, meta: { requiresAuth: true } },
   { path: '/admin/projects', name: 'admin.projects', component: AdminProjects, meta: { requiresAuth: true } },
   { path: '/admin/posts', name: 'admin.posts', component: AdminPosts, meta: { requiresAuth: true } },
   { path: '/admin/skills', name: 'admin.skills', component: AdminSkills, meta: { requiresAuth: true } },

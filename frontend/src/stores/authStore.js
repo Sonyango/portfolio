@@ -157,7 +157,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function pingActivity() {
     if (!user.value) return
     try {
-      await api.get('/admin/activity-check')
+      await api.post('/admin/activity-check')
     } catch (error) {
       if (error.response?.status === 401) {
         localStorage.removeItem('admin_token')

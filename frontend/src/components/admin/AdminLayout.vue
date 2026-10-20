@@ -17,6 +17,7 @@ import {
   PowerIcon,
   Bars3Icon,
   XMarkIcon,
+  ShieldCheckIcon,
 } from '@heroicons/vue/24/outline';
 
 const router = useRouter()
@@ -44,6 +45,7 @@ const navItems = [
   { name: 'Media', route: 'admin.media', icon: PhotoIcon },
   { name: 'Messages', route: 'admin.messages', icon: EnvelopeIcon },
   { name: 'Settings', route: 'admin.settings', icon: Cog6ToothIcon },
+  { name: 'Profile', route: 'admin.profile', icon: ShieldCheckIcon },
 ]
 
 async function handleLogout() {

@@ -71,7 +71,7 @@ Route::prefix('admin')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/change-password', [AuthController::class, 'changePassword']);
-        Route::get('/activity-check', [AuthController::class, 'checkActivity']);
+        Route::post('/activity-check', [AuthController::class, 'checkActivity'])->name('admin.activity-check');
         Route::put('/profile', [AuthController::class, 'updateProfile']);
 
         // MFA management
