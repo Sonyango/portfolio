@@ -7,9 +7,13 @@ use App\Http\Requests\ContactFormRequest;
 use App\Models\ContactMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use App\Models\User;
+use App\Services\BrevoService;
 
 class ContactController extends Controller
 {
+    public function __construct(private BrevoService $brevo) {}
+
     public function store(ContactFormRequest $request)
     {
         // Hoenypot check. If 'website' field is filled, it's a bot
@@ -55,11 +59,44 @@ class ContactController extends Controller
             'message' => strip_tags($validated['message']),
         ];
 
+        // Save message to database
+        $contactMessage = ContactMessage::create($sanitized);
 
-        ContactMessage::create($sanitized);
+        // Send email notificatio to admin
+        $this->notifyAdmin($contactMessage);
 
         return response()->json([
             'message' => 'Your message has been received. I will get back to you as soon as possible.'
         ]);
+    }
+
+    private function notifyAdmin(ContactMessage $message): void
+    {
+        try {
+            // Get admin email from settings or fall back to env
+        $adminEmail = \App\Models\Setting::get('email')
+                      ?: env('ADMIN_EMAIL');
+
+        if (!$adminEmail) return;
+
+        // Get admin name
+        $admin = User::where('role', 'admin')->first();
+        $adminName = $admin?->name ?? 'Admin';
+
+        $this->brevo->sendContactNotification(
+            $adminEmail,
+            $adminName,
+            $message,
+        );
+        } catch (\Exception $e) {
+            //Log but don't fail the request if email fails
+            \Illuminate\Support\Facades\Log::error(
+                'Failed to send contact notification email',
+                [
+                    'message_id' => $message->id,
+                    'error'      => $e->getMessage(),
+                ]
+            );
+        }
     }
 }

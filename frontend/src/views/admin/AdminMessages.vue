@@ -12,10 +12,14 @@ const uiStore   = useUiStore()
 const messages  = ref([])
 const selected  = ref(null)
 const deleteId  = ref(null)
+const unreadCount = ref(0)
 
 async function fetchMessages() {
   const { data } = await get('/admin/messages')
-  if (data) messages.value  = data.data
+  if (data) {
+    messages.value  = data.data ?? []
+    unreadCount.value = messages.value.filter(m => !m.read_at).length
+  }
 }
 
 async function markRead(message) {
@@ -62,19 +66,22 @@ onMounted(fetchMessages)
           @click="openMessage(msg)"
           :class="['bg-slate-800 rounded-xl border p-4 cursor-pointer transition-colors',
             selected?.id === msg.id
-              ? 'border-indigo-500'
-              : 'border-slate-700 hover:border-slate-600',
-            !msg.read_at ? 'border-l-2 border-l-indigo-500' : '']">
+              ? 'border-indigo-500 bg-indigo-500/5' : 'border-slate-700 hover:border-slate-600 bg-slate-800',]">
           <div class="flex items-center justify-between mb-1">
-            <p :class="['text-sm font-medium',
-              !msg.read_at ? 'text-white' : 'text-slate-300']">
+            <p :class="['text-sm font-medium truncate flex-1', !msg.read_at ? 'text-white' : 'text-slate-300']">
               {{ msg.name }}
             </p>
+            <!-- Unread dot -->
             <span v-if="!msg.read_at"
-              class="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
+              class="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0 ml-2 animate-pulse" />
           </div>
-          <p class="text-slate-400 text-xs truncate">{{ msg.subject }}</p>
-          <p class="text-slate-500 text-xs mt-1">{{ msg.email }}</p>
+          <p class="text-slate-400 text-xs truncate mb-1">{{ msg.subject }}</p>
+          <div class="flex items-center justify-between">
+            <p class="text-slate-500 text-xs">{{ msg.email }}</p>
+            <p class="text-slate-600 text-xs">
+              {{ msg.created_at ? new Date(msg.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '' }}
+            </p>
+          </div>
         </div>
       </div>
 

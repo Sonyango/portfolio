@@ -142,6 +142,45 @@ class BrevoService
         );
     }
 
+    public function sendContactNotification(
+        string  $adminEmail,
+        string  $adminName,
+        \App\Models\ContactMessage $message
+    ): bool {
+        $receivedAt = $message->created_at
+            ? $message->created_at->format('d M Y \a\t H:i T')
+            : now()->format('d M Y \a\t H:i T');
+
+        // Truncate long messages in the preview
+        $messagePreview = strlen($message->message) > 500
+            ? substr($message->message, 0, 500) . '...'
+            : $message->message;
+
+        // Escape HTML entities
+        $senderName     = htmlspecialchars($message->name, ENT_QUOTES, 'UTF-8');
+        $senderEmail    = htmlspecialchars($message->email, ENT_QUOTES, 'UTF-8');
+        $subject        = htmlspecialchars($message->subject, ENT_QUOTES, 'UTF-8');
+        $body           = htmlspecialchars($messagePreview, ENT_QUOTES, 'UTF-8');
+        $replyTo        = $message->email;
+
+        $html = $this->contactNotificationTemplate(
+            $adminName,
+            $senderName,
+            $senderEmail,
+            $subject,
+            $body,
+            $receivedAt,
+            $replyTo
+        );
+
+        return $this->send(
+            $adminEmail,
+            $adminName,
+            "New Message: {$subject}",
+            $html
+        );
+    }
+
     // HTML Templates
     private function baseTemplate(string $content): string
     {
@@ -307,6 +346,91 @@ class BrevoService
               If you did not make this change, reset your password immediately
               and contact your hosting provider.
             </div>
+        ");
+    }
+
+    private function contactNotificationTemplate(
+        string $adminName,
+        string $senderName,
+        string $senderEmail,
+        string $subject,
+        string $body,
+        string $receivedAt,
+        string $replyTo
+    ): string {
+        return $this->baseTemplate("
+        <p style='margin: 0 0 8px;'>Hi <strong>{$adminName}</strong>,</p>
+        <p style='margin: 0 0 20px; color: #94a3b8;'>
+            You have received a new message through your portfolio contact form.
+        </p>
+
+        <div style='background: #0f172a; border-radius: 10px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #6366f1;'>
+            <teable style='width: 100%; border-collapse: collapse;'>
+            <tr>
+                <td style='padding: 6px 0; vertical-align: top; width: 90px;'>
+                    <span style='color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;'>
+                        From
+                    </span>
+                </td>
+                <td style='padding: 6px 0;'>
+                    <span style='color: #e2e8f0; font-size: 14px;'>
+                        <strong>{$senderName}</strong>
+                    </span>
+                    <br>
+                    <a href='mailto:{$replyTo}' style='color: #818cf8; font-size: 13px; text-decoration: none;'>
+                        {$senderEmail}
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <td style='padding: 6px 0; vertical-align: top;'>
+                <span style='color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;'>
+                    Subject
+                </span>
+                </td>
+                <td style='padding: 6px 0;'>
+                    <span style='color: #e2e8f0; font-size: 14px; font-weight: 600;'>
+                        {$subject}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td style='padding: 6px 0; vertical-align: top;'>
+                    <span style='color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;'>
+                        Received
+                    </span>
+                </td>
+                <td style='padding: 6px 0;'>
+                    <span style='color: #94a3b8; font-size: 13px;'>
+                        {$receivedAt}
+                    </span>
+                </td>
+            </tr>
+            </table>
+        </div>
+
+        <div style='margin-bottom: 24px;'>
+            <p style='color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin: 0 0 10px;'>
+                Message
+            </p>
+            <div style='background: #0f172a; border-radius: 10px; padding: 20px; border: 1px solid #1e293b; color: #cbd5e1; font-size: 14px; line-height: 1.7; white-space: pre-wrap;'>
+                {$body}
+            </div>
+        </div>
+
+        <div style='text-align: center; margin-bottom: 20px;'>
+            <a href='mailto:{$replyTo}?subject=Re: {$subject}'
+               style='display: inline-block; background: #6366f1; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 14px;'>
+               Reply to {$senderName}
+            </a>
+        </div>
+
+        <div style='text-align: center;'>
+            <a href='" . config('app.frontend_url', 'http://localhost:5173'). "/admin/messages'
+                style='color: #6478b; font-size: 12px; text-decoration: none;'>
+                View in Admin Dashboard
+            </a>
+        </div>
         ");
     }
 }

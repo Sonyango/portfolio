@@ -1,6 +1,7 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import api from '@/api/index.js';
 import { useAuthStore } from '@/stores/authStore';
 import { useActivityTracker } from '@/composables/useActivityTracker';
 import ToastNotification from '@/components/admin/ToastNotification.vue';
@@ -30,6 +31,9 @@ useActivityTracker()
 // Sidebar open state(closed by default on mobole)
 const sidebarOpen = ref(false)
 
+const unreadMessages = ref(0)
+let unreadInterval = null
+
 // Close sidebar when route changes(mobile nav)
 watch(() => route.path, () => {
   sidebarOpen.value = false
@@ -47,6 +51,25 @@ const navItems = [
   { name: 'Settings', route: 'admin.settings', icon: Cog6ToothIcon },
   { name: 'Profile', route: 'admin.profile', icon: ShieldCheckIcon },
 ]
+
+async function fetchUnreadCount() {
+  try {
+    const { data } = await api.get('/admin/messages')
+    const messages = data?.data ?? []
+    unreadMessages.value = messages.filter(m => !m.read_at).length
+  } catch (error) {
+    console.log.error
+  }
+}
+
+onMounted(() => {
+  fetchUnreadCount()
+  unreadInterval = setInterval(fetchUnreadCount, 2 * 60 * 1000) // Refresh unread count every 2 minutes
+})
+
+onUnmounted(() => {
+  clearInterval(unreadInterval)
+})
 
 async function handleLogout() {
   await authStore.logout()
@@ -96,10 +119,17 @@ async function handleLogout() {
       <!-- Navigation -->
       <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         <router-link v-for="item in navItems" :key="item.route" :to="{ name: item.route }"
-          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative"
           :class="route.name === item.route ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-700 hover:text-white'">
           <component :is="item.icon" class="w-5 h-5 shrink-0" />
-          {{ item.name }}
+          <span class="flex-1">{{ item.name }}</span>
+
+          <!-- Unread badge messages in items -->
+           <span
+              v-if="item.route === 'admin.messages' && unreadMessages > 0"
+              class="min-w-5 h-5 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shrink-0">
+              {{ unreadMessages > 99 ? '99+' : unreadMessages }}
+            </span>
         </router-link>
       </nav>
 

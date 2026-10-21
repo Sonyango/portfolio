@@ -25,7 +25,10 @@ async function fetchStats() {
   stats.value = {
     projects: projects.data?.data?.length || 0,
     posts:    posts.data?.data?.length    || 0,
+    // Shows total messages
     messages: messages.data?.data?.length || 0,
+    // Count unread messages
+    unreadMessages: messages.data?.data?.filter(m => !m.read_at).length || 0,
     skills:   skills.data?.data?.length   || 0,
   }
 }
@@ -63,15 +66,19 @@ onMounted(fetchStats)
         v-for="card in statCards"
         :key="card.key"
         :to="{ name: card.route }"
-        class="bg-slate-800 border border-slate-700 hover:border-slate-600
-               rounded-2xl p-5 transition-colors group"
-      >
-        <div :class="['w-10 h-10 rounded-xl flex items-center justify-center mb-3',
-                       card.bg]">
+        class="bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-2xl p-5 transition-colors group relative">
+        <div :class="['w-10 h-10 rounded-xl flex items-center justify-center mb-3', card.bg]">
           <component :is="card.icon" :class="['w-5 h-5', card.color]" />
         </div>
         <p class="text-3xl font-bold text-white mb-1">{{ stats[card.key] }}</p>
         <p class="text-slate-400 text-sm">{{ card.label }}</p>
+
+        <!-- Badge for unread messages -->
+         <div
+            v-if="card.key === 'messages' && stats.unreadMessages > 0"
+            class="absolute top-3 right-3 min-w-5 h-5 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+            {{ stats.unreadMessages }}
+          </div>
       </router-link>
     </div>
 
