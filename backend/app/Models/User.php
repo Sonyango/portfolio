@@ -52,7 +52,7 @@ class User extends Authenticatable
     // Falls back to email if TOTP prefferred but not enrolled
     public function effectiveMfaMethod(): string
     {
-        if ($this->preffered_mfa_method === 'totp' && $this->hasTotpEnrolled()) {
+        if ($this->preferred_mfa_method === 'totp' && $this->hasTotpEnrolled()) {
             return 'totp';
         }
         return 'email';

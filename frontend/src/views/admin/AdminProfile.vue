@@ -286,7 +286,7 @@ onMounted(loadProfile)
                   </div>
                   <div>
                     <p class="text-white text-sm font-medium">Email Code</p>
-                    <p class="text-slate-400 text-xs">6-digit code sent to {{ profile.email }}</p>
+                    <p class="text-slate-400 text-xs"> A 6-digit code will be sent to {{ profile.email }}</p>
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
