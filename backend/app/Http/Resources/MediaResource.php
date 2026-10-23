@@ -27,7 +27,8 @@ class MediaResource extends JsonResource
             'order'             => $this->order,
             'mediable_type'     => $this->mediable_type,
             'mediable_id'       => $this->mediable_id,
-            'created_at'        => $this->created_at?->toDateString(),
+            'created_at'        => $this->created_at?->format('d M Y H:i'),
+            'created_at_iso'    => $this->created_at?->toIso8601String(),
         ];
     }
 

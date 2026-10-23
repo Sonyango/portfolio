@@ -51,10 +51,6 @@ Route::middleware('throttle:3,1')
 // Admin Auth routes
 Route::prefix('admin')->group(function () {
 
-    // Route::post('/login', [AuthController::class, 'login']);
-    // Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-    // Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
-
     // Public auth routes
     Route::middleware('throttle:10,1')->group(function () {
         Route::post('/login', [AuthController::class, 'login']);
