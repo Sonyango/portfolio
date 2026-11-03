@@ -81,8 +81,8 @@ const getProfileImageUrl = () => {
                   dark:bg-green-500/10 dark:border-green-500/20 dark:text-green-400
                   bg-[#00F0A0]/10 border-[#00F0A0]/30 text-[#00F0A0]">
             <span class="w-2 h-2 rounded-full animate-pulse dark:bg-green-400 bg-[#00F0A0]">
-              Available for work
             </span>
+            <span class="animate-pulse">Available for work</span>
           </div>
 
           <!-- Main heading -->

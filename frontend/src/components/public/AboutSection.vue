@@ -47,7 +47,7 @@ const settingsStore = useSettingsStore()
             v-for="stat in [
               { label: 'Location', value: settingsStore.get('location', 'Nairobi, Kenya') },
               { label: 'Email', value: settingsStore.get('email', 'hello@example.com') },
-              { label: 'Status', value: settingsStore.get('available_for_work') === 'true' ? 'Available' : 'Not Available' },
+              { label: 'Status', value: settingsStore.get('available_for_work') === 'true' ? 'Available for work' : 'Not Available' },
               { label: 'Focus',  value: 'Full Stack + ICT' },
             ]"
             :key="stat.label"
