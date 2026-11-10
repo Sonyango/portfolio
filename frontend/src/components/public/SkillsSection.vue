@@ -20,12 +20,12 @@ onMounted(async () => {
     <div class="max-w-6xl mx-auto">
 
       <div class="text-center mb-16">
-        <p class="text-sm font-semibold tracking-widest uppercase mb-3
+        <!-- <p class="text-sm font-semibold tracking-widest uppercase mb-3
                   dark:text-indigo-400 text-[#00F0A0]">
           What I Work With
-        </p>
+        </p> -->
         <h2 class="font-display text-4xl font-bold dark:text-white text-[#00F0A0]">
-          Skills & Technologies
+          Skills & Tech Stack
         </h2>
       </div>
 

@@ -28,7 +28,7 @@ onMounted(async () => {
     <JsonLdSchema />
     <HeroSection />
     <AboutSection />
-    <SkillsSection />
+    <!-- <SkillsSection /> -->
     <ExperienceSection />
     <ServiesSection />
   </PublicLayout>
