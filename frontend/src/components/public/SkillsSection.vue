@@ -16,14 +16,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section id="skills" class="py-24 px-4 sm:px-6 lg:px-12 dark:bg-slate-900 bg-[#0D3530]">
-    <div class="max-w-6xl mx-auto">
+  <section id="skills" class="py-5 px-3 sm:px-6 lg:px-12 dark:bg-slate-900 bg-[#0D3530]">
+    <div class="mx-auto">
 
-      <div class="text-center mb-16">
-        <!-- <p class="text-sm font-semibold tracking-widest uppercase mb-3
-                  dark:text-indigo-400 text-[#00F0A0]">
-          What I Work With
-        </p> -->
+      <div class="text-center mb-5">
+
         <h2 class="font-display text-4xl font-bold dark:text-white text-[#00F0A0]">
           Skills & Tech Stack
         </h2>
@@ -60,6 +57,7 @@ onMounted(async () => {
           </div>
         </div>
       </div>
+
     </div>
   </section>
 </template>
