@@ -7,8 +7,8 @@ const settingsStore = useSettingsStore()
 </script>
 
 <template>
-  <section id="about" class="py-14 px-4 dark:bg-slate-900 bg-[#0D3530]">
-    <div class="max-w-6xl mx-auto">
+  <section id="about" class="py-10 px-4 dark:bg-slate-900 bg-[#0D3530]">
+    <div class="mx-auto w-full">
 
       <!-- Centered section label -->
        <p class="text-center mb-6 text-sm font-semibold tracking-widest uppercase dark:text-indigo-400 text-[#00F0A0]">

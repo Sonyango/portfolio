@@ -36,92 +36,133 @@ const getProfileImageUrl = () => {
       Loading...
     </div>
 
-    <div v-else class="max-w-6xl mx-auto relative z-10 w-full py-5 lg:py-0">
+    <div v-else class="mx-auto relative z-10 w-full py-3 lg:py-3">
 
-      <!-- Flex container for profile image and content -->
-      <div class="flex flex-col lg:flex-row items-center gap-8 lg:gap-16 min-h-[80vh] lg:min-h-0 justify-center">
-
-        <!-- Profile Image Section (Top on mobile, Right on desktop) -->
-        <div class="shrink flex justify-center lg:order-2 lg:-mt-40">
-          <!-- When profile image exists -->
-          <div v-if="getProfileImageUrl()" class="relative w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80">
-            <!-- Loading skeleton -->
-            <div v-if="!imageLoaded && !imageError"
-              class="absolute inset-0 rounded-full bg-[#00F0A0]/10 dark:bg-slate-800 animate-pulse" />
-
-            <!-- Profile image -->
-            <ProtectedImage :src="getProfileImageUrl()" :alt="settingsStore.get('site_name', 'Profile')" img-class="w-full h-full rounded-full object-cover border-4 dark:border-slate-700
-                        border-[#00F0A0]/30 shadow-lg shadow-[#00F0A0]/20" wrap-class="w-full h-full" />
-          </div>
-
-          <!-- Default avatar/placeholder when no image uploaded -->
-          <div v-else class="w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80 rounded-full
-                        bg-[#00F0A0]/10 dark:bg-slate-800
-                        border-4 dark:border-slate-700 border-[#00F0A0]/30
-                        flex items-center justify-center">
-            <span class="text-6xl md:text-7xl lg:text-8xl font-bold
-                        text-[#00F0A0] dark:text-slate-400">
-              {{ (settingsStore.get('site_name', '?') || '?').charAt(0).toUpperCase() }}
-            </span>
-          </div>
+      <!-- Desktop badge, centered above both cards -->
+       <div class="mb-4 hidden justify-center lg:flex">
+        <div
+          v-if="settingsStore.get('available_for_work') === 'true'"
+          class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium
+                 dark:border-green-500/20 dark:bg-green-500/10 dark:text-green-400
+                 border-[#00F0A0]/30 bg-[#00F0A0]/10 text-[#00F0A0]">
+          <span class="h-2 w-2 animate-pulse rounded-full dark:bg-green-400 bg-[#00F0A0]" />
+          <span class="animate-pulse">Available for work</span>
         </div>
+       </div>
 
-        <!-- Content Section (Bottom on mobile, Left on desktop) -->
-        <div class="flex-1 text-center lg:text-left w-full lg:order-1 flex flex-col justify-center">
+      <!-- Left and right columns -->
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
-          <!-- Availability badge-->
-          <div v-if="settingsStore.get('available_for_work') === 'true'" class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-8 border
-                  dark:bg-green-500/10 dark:border-green-500/20 dark:text-green-400
-                  bg-[#00F0A0]/10 border-[#00F0A0]/30 text-[#00F0A0]">
-            <span class="w-2 h-2 rounded-full animate-pulse dark:bg-green-400 bg-[#00F0A0]">
-            </span>
+        <!-- Left: content card on desktop -->
+        <div class="order-2 flex w-full flex-col justify-center rounded-2xl border p-6 text-center
++        lg:order-1 lg:p-8 lg:text-left dark:border-slate-800 dark:bg-slate-900
++        border-[#1A4A42] bg-[#0D3530]">
+          <!-- Availability badge on mobile -->
+           <div v-if="settingsStore.get('available_for_work') === 'true'"
+             class="mb-8 inline-flex items-center gap-2 self-center rounded-full border px-4 py-2 text-sm font-medium lg:hidden
+                   dark:border-green-500/20 dark:bg-green-500/10 dark:text-green-400 border-[#00F0A0]/30 bg-[#00F0A0]/10 text-[#00F0A0]">
+            <span class="h-2 w-2 animate-pulse rounded-full dark:bg-green-400 bg-[#00F0A0]" />
             <span class="animate-pulse">Available for work</span>
           </div>
 
-          <!-- Main heading -->
-          <h1 class="font-display text-5xl md:text-7xl font-bold mb-6 leading-tight
-                    dark:text-white text-[#00F0A0]">
+          <h1 class="mb-6 font-display text-5xl font-bold leading-tight md:text-7xl dark:text-white text-[#00F0A0]">
             {{ settingsStore.get('hero_title', 'Hi, I\'m a Full Stack Developer') }}
           </h1>
 
-          <!-- Subtitle -->
-          <p class="text-xl mb-10 max-w-2xl leading-relaxed
-                   dark:text-slate-400 text-[#B2DFDB] lg:max-w-none">
-            {{ settingsStore.get('hero_subtitle',
-              'I build modern web applications and ICT solutions.') }}
+          <p class="mb-10 max-w-2xl text-xl leading-relaxed lg:max-w-none dark:text-slate-400 text-[#B2DFDB]">
+            {{ settingsStore.get('hero_subtitle', 'I build modern web applications, Networking, and providing ICT solutions.') }}
           </p>
-
-          <!-- CTA Buttons -->
-          <div class="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4">
-            <router-link to="/projects" class="px-8 py-3.5 font-medium rounded-xl transition-colors text-sm
-                    dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:text-white
-                    bg-[#00F0A0] hover:bg-white text-[#0B2B26]">
+          <div class="flex flex-col justify-center gap-4 sm:flex-row sm:items-center lg:justify-center lg:items-center">
+            <router-link
+              to="/projects"
+              class="rounded-xl px-8 py-3.5 text-sm font-medium transition-colors
+                     dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:text-white
+                     bg-[#00F0A0] hover:bg-white text-[#0B2B26]">
               View My Work
             </router-link>
-            <router-link to="/contact" class="px-8 py-3.5 font-medium rounded-xl transition-colors text-sm
-                    border dark:border-slate-700 dark:hover:border-slate-500
-                    dark:text-slate-300 dark:hover:text-white
-                    border-white/30 hover:border-white text-white hover:text-white">
+            <router-link
+              to="/contact"
+               class="rounded-xl border px-8 py-3.5 text-sm font-medium transition-colors
+                     dark:border-slate-700 dark:hover:border-slate-500 dark:text-slate-300
+                     dark:hover:text-white border-white/30 hover:border-white text-white">
               Get In Touch
             </router-link>
           </div>
+          <!-- Social links below content on mobile -->
+           <div class="mt-10 flex items-center justify-center gap-4 lg:hidden">
+              <a
+                v-if="settingsStore.get('github_url')"
+                :href="settingsStore.get('github_url')"
+                target="_blank"
+                class="text-sm transition-colors dark:text-slate-400 dark:hover:text-white
+                      text-[#B2DFDB] hover:text-[#00F0A0]"
+              >
+                GitHub
+              </a>
+              <span class="dark:text-slate-700 text-[#1A4A42]">.</span>
+                <a
+                v-if="settingsStore.get('linkedin_url')"
+                :href="settingsStore.get('linkedin_url')"
+                target="_blank"
+                class="text-sm transition-colors dark:text-slate-400 dark:hover:text-white
+                      text-[#B2DFDB] hover:text-[#00F0A0]"
+              >
+                LinkedIn
+              </a>
+              <span class="dark:text-slate-700 text-[#1A4A42]">.</span>
+              <a
+                v-if="settingsStore.get('email')"
+                :href="`mailto:${settingsStore.get('email')}`"
+                class="text-sm transition-colors dark:text-slate-400 dark:hover:text-white
+                      text-[#B2DFDB] hover:text-[#00F0A0]"
+              >
+                Email
+              </a>
+           </div>
+        </div>
 
-          <!-- Social links-->
-          <div class="flex items-center justify-center gap-4 mt-10">
-            <a v-if="settingsStore.get('github_url')" :href="settingsStore.get('github_url')" target="_blank" class="text-sm transition-colors dark:text-slate-400 dark:hover:text-white
-                    text-[#B2DFDB] hover:text-[#00F0A0]">
+        <!-- Right: profile image and social links  -->
+        <div class="order-1 flex shrink flex-col items-center justify-center lg:order-2 lg:rounded-2xl
+                 lg:border lg:p-8 dark:lg:border-slate-800 dark:lg:bg-slate-900 lg:border-[#1A4A42] lg:bg-[#0D3530]">
+          <div v-if="getProfileImageUrl()" class="relative h-48 w-48 md:h-64 md:w-64 lg:h-80 lg:w-80">
+            <div v-if="!imageLoaded && !imageError"
+            class="absolute inset-0 animate-pulse rounded-full bg-[#00F0A0]/10 dark:bg-slate-800" />
+
+            <ProtectedImage
+              :src="getProfileImageUrl()"
+              :alt="settingsStore.get('site_name', 'Profile')"
+              img-class="w-full h-full rounded-full object-cover border-4 dark:border-slate-700 border-[#00F0A0]/30 shadow-lg shadow-[#00F0A0]/20"
+              wrap-class="w-full h-full"
+            />
+          </div>
+          <div
+            v-else
+            class="flex h-48 w-48 items-center justify-center rounded-full border-4 bg-[#00F0A0]/10 dark:bg-slate-800
+                 dark:border-slate-700 border-[#00F0A0]/30 md:h-64 md:w-64 lg:h-80 lg:w-80">
+            <span class="text-6xl font-bold text-[#00F0A0] dark:text-slate-400 md:text-7xl lg:text-8xl">
+              {{ (settingsStore.get('site_name', '?') || '?').charAt(0).toUpperCase() }}
+            </span>
+          </div>
+
+          <!-- Social links move below the profile on desktop -->
+          <div class="mt-8 hidden items-center justify-center gap-4 lg:flex">
+            <a
+            v-if="settingsStore.get('github_url')" :href="settingsStore.get('github_url')" target="_blank"
+            class="text-sm transition-colors dark:text-slate-400 dark:hover:text-white  text-[#B2DFDB] hover:text-[#00F0A0]">
               GitHub
             </a>
             <span class="dark:text-slate-700 text-[#1A4A42]">.</span>
 
-            <a v-if="settingsStore.get('linkedin_url')" :href="settingsStore.get('linkedin_url')" target="_blank" class="text-sm transition-colors dark:text-slate-400 dark:hover:text-white
-                    text-[#B2DFDB] hover:text-[#00F0A0]">
+            <a
+            v-if="settingsStore.get('linkedin_url')" :href="settingsStore.get('linkedin_url')" target="_blank"
+            class="text-sm transition-colors dark:text-slate-400 dark:hover:text-white  text-[#B2DFDB] hover:text-[#00F0A0]">
               LinkedIn
             </a>
             <span class="dark:text-slate-700 text-[#1A4A42]">.</span>
 
-            <a v-if="settingsStore.get('email')" :href="`mailto:${settingsStore.get('email')}`" class="text-sm transition-colors dark:text-slate-400 dark:hover:text-white
-                    text-[#B2DFDB] hover:text-[#00F0A0]">
+            <a
+            v-if="settingsStore.get('email')" :href="`mailto:${settingsStore.get('email')}`"
+            class="text-sm transition-colors dark:text-slate-400 dark:hover:text-white  text-[#B2DFDB] hover:text-[#00F0A0]">
               Email
             </a>
           </div>
