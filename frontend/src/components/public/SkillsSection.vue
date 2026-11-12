@@ -4,6 +4,10 @@ import api from '@/api//index.js';
 
 const skillGroups = ref({})
 const loading = ref(true)
+const categories = ['Frontend', 'Backend', 'Database', 'ICT Services']
+
+const getSkillsForCategory = (category) => Object.entries(skillGroups.value)
+  .flatMap(([group, skills]) => group.trim().toLowerCase() === category.toLowerCase() ? skills : [])
 
 onMounted(async () => {
   try {
@@ -16,48 +20,102 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section id="skills" class="py-5 px-3 sm:px-6 lg:px-12 dark:bg-slate-900 bg-[#0D3530]">
-    <div class="mx-auto">
+  <section
+    id="skills"
+    class="rounded-2xl border border-[#1A4A42] bg-[#0D3530] p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900"
+  >
+    <header class="mb-4">
+      <p class="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#00F0A0] dark:text-indigo-400">
+        What I work with
+      </p>
+      <h2 class="font-display text-3xl font-bold text-white sm:text-4xl">
+        Skills &amp; Tech Stack
+      </h2>
+      <p class="mt-2 text-sm leading-relaxed text-[#B2DFDB] dark:text-slate-400">
+        A snapshot of my technical skills.
+      </p>
+    </header>
 
-      <div class="text-center mb-5">
+    <p
+      v-if="loading"
+      class="rounded-xl border border-[#1A4A42] bg-[#0B2B26] px-4 py-6 text-center text-sm text-[#B2DFDB] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
+      role="status"
+      aria-live="polite"
+    >
+      Loading skills…
+    </p>
 
-        <h2 class="font-display text-4xl font-bold dark:text-white text-[#00F0A0]">
-          Skills & Tech Stack
-        </h2>
-      </div>
+    <p
+      v-else-if="!categories.some((category) => getSkillsForCategory(category).length)"
+      class="rounded-xl border border-[#1A4A42] bg-[#0B2B26] px-4 py-6 text-center text-sm text-[#B2DFDB] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
+    >
+      No skills added yet.
+    </p>
 
-      <div v-if="loading" class="text-center dark:text-slate-400 text-[#B2DFDB]">Loading skills...</div>
-
-      <div v-else-if="Object.keys(skillGroups).length === 0" class="text-center dark:text-slate-400 text-[#B2DFDB]">No
-        skills added yet.
-      </div>
-
-      <div v-else class="space-y-10">
-        <div v-for="(skills, category) in skillGroups" :key="category">
-          <h3 class="text-sm font-semibold uppercase tracking-widest mb-4
-                    dark:text-slate-400 text-[#7BB8B2]">
-            {{ category }}
-          </h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div v-for="skill in skills" :key="skill.id"
-              class="rounded-2xl px-4 py-5 transition-colors dark:bg-slate-900 dark:border-slate-800
-                    dark:hover:border-indigo-500/30 bg-[#0B2B26] border border-[#1A4A42] hover:border-[#00F0A0]/40">
-              <div class="flex items-center justify-between mb-3">
-                <span class="font-medium text-sm dark:text-white text-[#B2DFDB]">{{ skill.name }}</span>
-                <span class="text-xs font-semibold dark:text-indigo-400 text-[#00F0A0]">
-                  {{ skill.proficiency }}%
-                </span>
-              </div>
-              <div class="w-full rounded-full h-1.5 dark:bg-slate-800 bg-[#1A4A42]">
-                <div class="h-1.5 rounded-full transition-all duration-700
-                        dark:bg-linear-to-r dark:from-indigo-500 dark:to-violet-500 bg-[#00F0A0]"
-                  :style="{ width: skill.proficiency + '%' }" />
-              </div>
-            </div>
+    <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <article
+        v-for="(category, index) in categories"
+        :key="category"
+        class="overflow-hidden rounded-xl border border-[#1A4A42] bg-[#0B2B26] transition-colors hover:border-[#00F0A0]/50 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-indigo-500/50"
+      >
+        <header class="flex items-center justify-between border-b border-[#1A4A42] px-4 py-4 dark:border-slate-800">
+          <div class="flex items-center gap-3">
+            <span class="grid size-9 place-items-center rounded-lg bg-[#00F0A0]/10 text-xs font-bold text-[#00F0A0] dark:bg-indigo-500/10 dark:text-indigo-400">
+              {{ String(index + 1).padStart(2, '0') }}
+            </span>
+            <h3 class="font-semibold text-white">{{ category }}</h3>
           </div>
-        </div>
-      </div>
 
+          <span class="text-xs text-[#7BB8B2] dark:text-slate-500">
+            {{ getSkillsForCategory(category).length }}
+            {{ getSkillsForCategory(category).length === 1 ? 'skill' : 'skills' }}
+          </span>
+        </header>
+
+        <div class="overflow-x-auto px-4 py-2">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-[11px] uppercase tracking-wider text-[#7BB8B2] dark:text-slate-500">
+                <th scope="col" class="py-2 pr-3 font-medium">Skill</th>
+                <th scope="col" class="py-2 font-medium">Proficiency</th>
+              </tr>
+            </thead>
+
+            <tbody class="divide-y divide-[#1A4A42] dark:divide-slate-800">
+              <tr v-for="skill in getSkillsForCategory(category)" :key="skill.id">
+                <th scope="row" class="py-3 pr-3 text-sm font-medium text-[#B2DFDB] dark:text-slate-200">
+                  {{ skill.name }}
+                </th>
+                <td class="py-3">
+                  <div class="flex min-w-28 items-center gap-3">
+                    <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-[#1A4A42] dark:bg-slate-800">
+                      <div
+                        class="h-full rounded-full bg-[#00F0A0] transition-[width] duration-500 dark:bg-indigo-500"
+                        :style="{ width: skill.proficiency + '%' }"
+                        role="progressbar"
+                        :aria-label="`${skill.name} proficiency`"
+                        :aria-valuenow="skill.proficiency"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                      />
+                    </div>
+                    <span class="w-10 text-right text-xs font-semibold text-[#00F0A0] dark:text-indigo-400">
+                      {{ skill.proficiency }}%
+                    </span>
+                  </div>
+                </td>
+              </tr>
+
+              <tr v-if="!getSkillsForCategory(category).length">
+                <td colspan="2" class="py-4 text-sm text-[#7BB8B2] dark:text-slate-500">
+                  No skills listed yet.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
     </div>
   </section>
 </template>
+
