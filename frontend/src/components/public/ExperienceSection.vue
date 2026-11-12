@@ -16,10 +16,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section id="experience" class="py-24 px-4 dark:bg-slate-950 bg-[#0B2B26]">
-    <div class="max-w-4xl mx-auto">
+  <section id="experience" class="h-full rounded-2xl border border-[#1A4A42] py-6 px-4 sm:px-6 dark:bg-slate-950 dark:border-slate-800 bg-[#0B2B26]">
+    <div class="mx-auto">
 
-      <div class="text-center mb-16">
+      <div class="text-center mb-6">
         <p class="text-sm font-semibold tracking-widest uppercase mb-3
                 dark:text-indigo-400 text-[#00F0A0]">
           My Career Journey
@@ -53,7 +53,7 @@ onMounted(async () => {
              </div>
 
              <!-- Card -->
-              <div class="rounded-2xl p-6 transition-colors dark:bg-slate-900 dark:border-slate-800
+              <div class="rounded-2xl p-4 transition-colors dark:bg-slate-900 dark:border-slate-800
                         dark:hover:border-indigo-500/30 bg-[#0D3530] border-[#1A4A42] hover:border-[#00F0A0]/40">
                 <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
                   <div>

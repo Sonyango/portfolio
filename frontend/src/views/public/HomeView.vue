@@ -28,7 +28,9 @@ onMounted(async () => {
     <JsonLdSchema />
     <HeroSection />
     <AboutSection />
-    <ExperienceSection />
-    <ServiesSection />
+    <div class="mx-auto grid grid-cols-1 items-stretch gap-6 px-4 py-8 lg:grid-cols-2">
+      <ExperienceSection />
+      <ServiesSection />
+    </div>
   </PublicLayout>
 </template>

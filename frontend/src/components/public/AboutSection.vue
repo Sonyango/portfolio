@@ -42,7 +42,7 @@ const settingsStore = useSettingsStore()
                 { label: 'Location', value: settingsStore.get('location', 'Nairobi, Kenya') },
                 { label: 'Email', value: settingsStore.get('email', 'hello@example.com') },
                 { label: 'Status', value: settingsStore.get('available_for_work') === 'true' ? 'Available for work' : 'Not Available' },
-                { label: 'Focus', value: 'Full Stack + ICT' },
+                { label: 'Focus', value: 'Software Development, ICT Services' },
               ]" :key="stat.label"
                 class="rounded-2xl p-5 border min-w-0 dark:bg-slate-900 dark:border-slate-800 bg-[#0B2B26] border-[#1A4A42]">
                 <p class="text-xs font-medium uppercase tracking-wider mb-1 dark:text-slate-500 text-[#7BB8B2]">

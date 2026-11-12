@@ -16,10 +16,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section id="services" class="py-24 px-4 dark:bg-slate-900 bg-[#0D3530]">
+  <section id="services" class="h-full rounded-2xl border border-[#1A4A42] bg-[#0D3530] px-4 py-6 sm:px-6 dark:border-slate-800 dark:bg-slate-900">
     <div class="max-w-6xl mx-auto">
 
-      <div class="text-center mb-16">
+      <div class="text-center mb-4">
         <p class="text-sm font-semibold tracking-widest uppercase mb-3
                 dark:text-indigo-400 text-[#00F0A0]">
           What I Offer
@@ -27,7 +27,7 @@ onMounted(async () => {
         <h2 class="font-display text-4xl font-bold dark:text-white text-[#00F0A0]">
           Services
         </h2>
-        <p class="mt-4 max-w-xl mx-auto dark:text-slate-400 text-[#B2DFDB]">
+        <p class="mt-2 max-w-xl mx-auto dark:text-slate-400 text-[#B2DFDB]">
           Available for freelance projects, contracts, and full-time opportunities.
         </p>
       </div>
@@ -40,8 +40,8 @@ onMounted(async () => {
         No services added yet.
       </div>
 
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div v-for="service in services" :key="services.id" class="rounded-2xl p-6 border transition-all group dark:bg-slate-900 dark:border-slate-800
+      <div v-else class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div v-for="service in services" :key="service.id" class="rounded-2xl p-6 border transition-all group dark:bg-slate-900 dark:border-slate-800
                 dark:hover:border-indigo-500/30 bg-[#0B2B26] border-[#1A4A42] hover:border-[#00F0A0]/40">
           <!-- Icon Placeholder-->
           <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-5 transition-colors dark:bg-indigo-500/10
