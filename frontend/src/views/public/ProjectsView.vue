@@ -32,22 +32,18 @@ onMounted(() => projectsStore.fetchProjects())
 
 <template>
   <PublicLayout>
-    <section class="py-24 px-4 dark:bg-slate-950 bg-[#0B2B26]">
-      <div class="max-w-6xl mx-auto">
+    <section class="py-6 px-4 dark:bg-slate-950 bg-[#0B2B26]">
+      <div class="mx-auto">
 
         <!-- header -->
-         <div class="text-center mb-16">
-          <p class="text-sm font-semibold tracking-widest uppercase mb-3
-                    dark:text-indigo-400 text-[#00F0A0]">
-            My Work
-          </p>
-          <h1 class="font-display text-5xl font-bold mb-4
+         <div class="text-center mb-4">
+          <h1 class="font-display text-3xl font-bold mb-4
                      dark:text-white text-[#00F0A0]">
             Projects
           </h1>
           <p class="max-w-xl mx-auto
                     dark:text-slate-400 text-[#B2DFDB]">
-            A collection of things I've built from web apps to ICT solutions.
+            A collection of my web development and ICT projects.
           </p>
          </div>
 

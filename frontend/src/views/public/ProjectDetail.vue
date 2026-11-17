@@ -31,12 +31,12 @@ onMounted(async () => {
 
 <template>
   <PublicLayout>
-    <section class="py-24 px-4 dark:bg-slate-950 bg-[#0B2B26]">
+    <section class="py-6 px-4 dark:bg-slate-950 bg-[#0B2B26]">
       <div class="max-w-4xl mx-auto">
 
         <!-- Back -->
          <router-link to="/projects"
-            class="inline-flex items-center gap-2 text-sm mb-10
+            class="inline-flex items-center gap-2 text-sm mb-3
                  transition-colors
                  dark:text-slate-400 dark:hover:text-white
                  text-[#B2DFDB] hover:text-[#00F0A0]">
@@ -79,7 +79,7 @@ onMounted(async () => {
                        dark:text-indigo-400 text-[#00F0A0]">
                 {{ projectsStore.current.category || 'Project' }}
               </span>
-              <h1 class="font-display text-4xl md:text-5xl font-bold
+              <h1 class="font-display text-2xl md:text-4xl font-bold
                      mt-2 mb-4
                      dark:text-white text-[#00F0A0]">
                 {{ projectsStore.current.title }}
@@ -160,7 +160,7 @@ onMounted(async () => {
                   </div>
 
                 <!-- Image gallery -->
-                 <div v-if="projectsStore.current.images?.length > 0" class="mt-12">
+                 <div v-if="projectsStore.current.images?.length > 0" class="mt-10">
                   <h2 class="font-semibold mb-4
                        dark:text-white text-[#00F0A0]">Gallery</h2>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -182,7 +182,7 @@ onMounted(async () => {
                  </div>
 
                  <!-- Back button at bottom -->
-                  <div class="mt-12 pt-8 border-t dark:border-slate-800 border-[#1A4A42]">
+                  <div class="mt-2 pt-8 border-t dark:border-slate-800 border-[#1A4A42]">
                     <router-link
                       to="/projects"
                       class="inline-flex items-center gap-2 text-sm transition-colors dark:text-slate-400

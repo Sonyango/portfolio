@@ -50,20 +50,16 @@ onMounted(fetchFilters)
 
 <template>
   <PublicLayout>
-    <section class="py-24 px-4 dark:bg-slate-950 bg-[#0B2B26]">
-      <div class="max-w-6xl mx-auto">
+    <section class="py-6 px-4 dark:bg-slate-950 bg-[#0B2B26]">
+      <div class="mx-auto">
 
         <!-- Header -->
-         <div class="text-center mb-16">
-          <p class="text-sm font-semibold tracking-widest uppercase mb-3
-                    dark:text-indigo-400 text-[#00F0A0]">
-            Thoughts & Tutorials
-          </p>
-          <h1 class="font-display text-5xl font-bold mb-4
+         <div class="text-center mb-6">
+          <h1 class="font-display text-3xl font-bold mb-2
                      dark:text-white text-[#00F0A0]">Blog</h1>
           <p class="max-w-xl mx-auto
                     dark:text-slate-400 text-[#B2DFDB]">
-            Articles on web development, ICT, and software engineering.
+            Articles on web development, ICT Services, and software engineering.
           </p>
          </div>
 
@@ -97,7 +93,7 @@ onMounted(fetchFilters)
                 No posts found.
               </div>
 
-              <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <PostCard
                   v-for="post in postsStore.posts"
                   :key="post.id"
